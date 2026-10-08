@@ -21,6 +21,8 @@ Newest entry on top. Add an entry at the end of each work session.
 ### Problems & fixes
 - **The kit's composer hook ran `install:features` with all features on.** → Re-ran it from a clean copy with `composer install --no-scripts`.
 - **The Wayfinder plugin called the host's PHP** (wrong version). → Pointed its `command` at the container.
+- **Review fixes:** a mixed-case email saved in profile settings locked the user out (Fortify lowercases at login, Postgres compares case-sensitively). → The profile request lowercases the email. Also removed the kit's GitHub/docs links from the sidebar and header, and added `: void` to the kit's test methods.
+- **Deferred from the review:** cross-tenant "email already taken" in profile settings, `/user/confirm-password` 500 (no page uses it), logging out other devices on password change, trimming the user data sent to the browser.
 - **TypeScript errors from `Route::redirect()`:** Laravel 13.35 lists a `query` HTTP method that Wayfinder's types don't know about. → Used plain `Route::get()` redirects.
 
 ### Next
