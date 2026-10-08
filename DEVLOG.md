@@ -5,6 +5,26 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-08 — Tickets list and detail pages
+
+### Done
+- **`/tickets`:** table (reference, subject, status, priority, requester, assignee, created), newest first, 20 per page with Previous/Next.
+- **`/tickets/{reference}`:** ticket details and the message thread. Internal notes are highlighted, and hidden from customers.
+- **"Tickets"** in the sidebar and header.
+- **Tests:** `TicketPagesTest` (agent sees all, customer sees own, customer gets a 404 on someone else's ticket, customer sees no internal notes). Suite: 47 passing.
+
+### Decisions
+- **One visibility rule, in one place:** `Ticket::visibleTo($user)` (customers see only the tickets they requested). Both pages use it, so a policy can wait for the roles work.
+- **Kept it minimal:** one controller (`TicketController`), models passed straight to Inertia (no API Resources), labels formatted in the page, plain Tailwind table with the kit's `Badge`.
+
+### Next
+- [ ] Reply to a ticket; change status and assignee
+- [ ] Search and filters on the list
+- [ ] Role-based authorization (policies)
+- [ ] Admin: add users to the organization
+
+---
+
 ## 2026-10-08 — Login (React starter kit)
 
 ### Done
