@@ -1,0 +1,48 @@
+<?php
+
+namespace App\Models;
+
+use App\Enums\MessageType;
+use Database\Factories\MessageFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+#[Fillable(['user_id', 'type', 'body', 'is_ai_generated'])]
+class Message extends Model
+{
+    /** @use HasFactory<MessageFactory> */
+    use HasFactory;
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'type' => MessageType::class,
+            'is_ai_generated' => 'boolean',
+        ];
+    }
+
+    /**
+     * @return BelongsTo<Ticket, $this>
+     */
+    public function ticket(): BelongsTo
+    {
+        return $this->belongsTo(Ticket::class);
+    }
+
+    /**
+     * The user who wrote the message; null for system messages.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function author(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+}

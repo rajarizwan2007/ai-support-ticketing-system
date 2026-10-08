@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\Organization;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -25,6 +27,8 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
+            'organization_id' => Organization::factory(),
+            'role_id' => fn () => Role::findOrCreateBySlug(Role::CUSTOMER)->id,
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
@@ -40,6 +44,37 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /**
+     * Indicate that the user is an organization admin.
+     */
+    public function admin(): static
+    {
+        return $this->withRole(Role::ADMIN);
+    }
+
+    /**
+     * Indicate that the user is a support agent.
+     */
+    public function agent(): static
+    {
+        return $this->withRole(Role::AGENT);
+    }
+
+    /**
+     * Indicate that the user is a customer.
+     */
+    public function customer(): static
+    {
+        return $this->withRole(Role::CUSTOMER);
+    }
+
+    private function withRole(string $slug): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role_id' => Role::findOrCreateBySlug($slug)->id,
         ]);
     }
 }

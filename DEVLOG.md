@@ -5,6 +5,43 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-08 — Migrations, models, factories and test database
+
+### Done
+- **Migrations** for organizations, roles, users (adds `organization_id`, `role_id`), categories, sla_policies, tickets, messages and kb_articles, all with `bigint` IDs.
+- **Models** with typed relationships and casts. Enums in `app/Enums`: TicketStatus, Priority, TicketChannel, Sentiment, MessageType, KbArticleStatus.
+- **Factories** for every model, with states such as `agent()`, `assigned()`, `resolved()`, `published()`, `internalNote()`, `system()` and `childOf()`. Related records always share one organization.
+- **Seeders:** `RoleSeeder` (admin, agent, customer). `DatabaseSeeder` builds a demo org "Acme Inc" (slug `acme`): 1 admin, 3 agents, 5 customers, 4 SLA policies, 4 categories (Refunds nested under Billing), 20 tickets with messages, and 6 KB articles. Logins are `admin@`, `agent@` and `customer@example.com`, all with password `password`.
+- **Tests:** `tests/Feature/DataModelTest.php` (8 passing) covers tenant-consistent factories, enum casts and delete rules.
+
+### Decisions
+- **Delete rules:**
+  - Organization deleted → everything it owns is deleted (cascade).
+  - Agent deleted → their tickets become unassigned; their messages keep the thread with a null author.
+  - Customer with tickets → can't be deleted (deactivate instead).
+  - Category or SLA policy deleted → tickets keep going with a null value.
+- **Requester, KB author and role keys use Postgres's default "no action" rule, not RESTRICT.** RESTRICT is checked immediately, which would break deleting a whole organization. No action is checked at the end of the statement, after the cascade has removed the tickets too.
+- **Indexes:** Postgres does *not* auto-index foreign keys, so every `organization_id` is indexed, either directly or as the first column of a composite or unique index (`organization_id + slug`, `organization_id + reference`, `organization_id + status`). Messages have `ticket_id + created_at` for loading threads.
+- **`organization_id` and `role_id` are not mass-assignable**, so a request can't move a user to another tenant or promote them to admin.
+- **`embedding` columns are deferred** until the embedding model is chosen, because the vector size depends on it.
+
+### Problems & fixes
+- **Factory state created a stray organization:** `assigned()` read `$attributes['organization_id']` while it was still an unresolved factory. → Wrap the value in a closure (`fn (array $attributes) => ...`) so it's resolved after the organization exists.
+- **SLA factory `priority()` state overrode `->for($org)`**, because states run after parent relationships. → States no longer set `organization_id`.
+- **⚠️ Tests wiped the dev database (twice).** Docker sets `DB_*` as real env vars, which Laravel reads from `$_SERVER` first, and phpunit's `<env force="true">` doesn't touch `$_SERVER`.
+  → Added `<server ... force="true">` entries pointing at a separate `ticketing_test` database (created by `docker/postgres/init/02-test-database.sql`).
+  → Added a guard in `tests/TestCase.php` that refuses to run unless the database name ends in `_test`. It lives in `refreshApplication()`: a guard in `beforeRefreshingDatabase()` is silently overridden by the `RefreshDatabase` trait's own method, since trait methods beat inherited ones.
+- **Postgres container saw an empty init folder:** the bind mount pointed at a stale directory (different inode). → `docker compose up -d --force-recreate postgres`.
+- **Re-running a rolled-back migration failed:** `add_organization_and_role_to_users_table` can't add a NOT NULL column to a table that still has users. That's fine for now (`migrate:fresh`), but once there's production data such changes need staging: add nullable → backfill → add the constraint.
+
+### Next
+- [ ] Tenancy: resolve the organization from the subdomain (middleware) and add a `BelongsToOrganization` trait with a global scope and auto-fill on create
+- [ ] Ticket reference generation (per-organization sequence)
+- [ ] Authentication and role-based authorization (policies)
+- [ ] Choose the embedding model → add `embedding vector(N)` columns and HNSW indexes
+
+---
+
 ## 2026-10-08 — Database design (ERD)
 
 ### Done

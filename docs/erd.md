@@ -155,7 +155,7 @@ erDiagram
 - **Customers are users too.** They have the Customer role, so requesters and agents share one table, and messages always point to `users`.
 - **SLA deadlines are stored on the ticket** (`first_response_due_at`, `resolution_due_at`). They're calculated once from the policy when the ticket is created, so later policy changes don't silently move existing deadlines, and breach checks are simple date comparisons.
 - **Status, priority, channel and similar fields are strings** backed by PHP enums. That's easier to change than Postgres enum types.
-- **`embedding` columns use pgvector.** The size (e.g. `vector(1024)`) depends on the embedding model, which isn't chosen yet. These columns power similar-ticket search and "suggested KB articles".
+- **`embedding` columns use pgvector** (not created yet: added in a later migration once the embedding model, and so the vector size, is chosen). The size (e.g. `vector(1024)`) depends on the embedding model. These columns power similar-ticket search and "suggested KB articles".
 - **Tickets are soft-deleted** (`deleted_at`), so history and SLA reporting survive deletion.
 - **`messages.type = internal_note`** keeps agent-only notes in the same thread. They're filtered out of what customers see.
 

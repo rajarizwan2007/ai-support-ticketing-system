@@ -156,4 +156,6 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - Stack: PHP 8.4-FPM (`app`), nginx (`nginx`, http://localhost:8088), PostgreSQL 17 + pgvector (`postgres`), Redis 7 (`redis`). See `docker-compose.yml`.
 - Laravel uses `pgsql` for the database and Redis for cache, sessions and queue.
 - **Multi-tenancy: single database.** The tenant is resolved from the subdomain. Every tenant-owned table has an indexed `organization_id`, enforced via a global scope/trait (never manual `where` clauses). Do not propose database-per-tenant. Data model: `docs/erd.md`.
+- **Tests run against the `ticketing_test` database** (`docker compose exec app php artisan test`). Never point tests at `ticketing`: `tests/TestCase.php` refuses any database whose name does not end in `_test`.
+- Reset dev data with `docker compose exec app php artisan migrate:fresh --seed` (demo org `acme`; logins admin@/agent@/customer@example.com, password `password`).
 - **Dev log:** at the end of each work session, add an entry at the top of `DEVLOG.md` (Done / Decisions / Problems & fixes / Next).
