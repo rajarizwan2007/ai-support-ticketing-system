@@ -2,7 +2,9 @@
 
 namespace Tests;
 
+use App\Models\Organization;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Support\Facades\URL;
 use RuntimeException;
 
 abstract class TestCase extends BaseTestCase
@@ -23,5 +25,17 @@ abstract class TestCase extends BaseTestCase
         if (! str_ends_with((string) $database, '_test')) {
             throw new RuntimeException("Refusing to run tests against non-test database [{$database}].");
         }
+    }
+
+    /**
+     * Make a new organization current and send requests to its subdomain.
+     */
+    protected function inOrganization(): Organization
+    {
+        $organization = Organization::factory()->create()->makeCurrent();
+
+        URL::forceRootUrl('http://'.$organization->slug.'.'.parse_url(config('app.url'), PHP_URL_HOST));
+
+        return $organization;
     }
 }

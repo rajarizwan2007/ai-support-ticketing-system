@@ -30,7 +30,7 @@ class TenancyTest extends TestCase
 
         config(['app.url' => 'http://ticketing.test']);
 
-        Route::middleware(['web', 'organization'])->get('/tenancy-probe', fn () => Organization::current()->slug);
+        Route::middleware('web')->get('/tenancy-probe', fn () => Organization::current()->slug);
     }
 
     /**

@@ -5,6 +5,32 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-08 — Login (React starter kit)
+
+### Done
+- **Ported the Laravel React starter kit** (Inertia + React + TypeScript + shadcn/ui, Fortify for auth, Wayfinder for typed routes). First stripped it with the kit's own `install:features` tool, keeping only: login/logout, forgot/reset password, dashboard, and profile/password/appearance settings.
+- **Every web route is a tenant route:** `ResolveOrganization` is in the `web` group. `acme.localhost:8088` works; the bare `localhost:8088` is a 404.
+- **The organization name is shared with React** (`HandleInertiaRequests`) and shown in the sidebar logo.
+- **Tests:** the kit's auth and settings tests run on a tenant subdomain via `TestCase::inOrganization()`, plus a test that a user can't log in on another organization's subdomain. Suite: 43 passing.
+
+### Decisions
+- **No public registration, 2FA, passkeys, email verification or account deletion.** Users belong to an organization (admins will add them), and customers with tickets can't be deleted anyway.
+- **No custom login code:** Fortify finds users through the tenant-scoped `User` model, so only that organization's users can log in.
+- **Node runs on the host** (`npm run dev` / `npm run build`); the Wayfinder Vite plugin runs `php artisan` through `docker compose exec`.
+
+### Problems & fixes
+- **The kit's composer hook ran `install:features` with all features on.** → Re-ran it from a clean copy with `composer install --no-scripts`.
+- **The Wayfinder plugin called the host's PHP** (wrong version). → Pointed its `command` at the container.
+- **TypeScript errors from `Route::redirect()`:** Laravel 13.35 lists a `query` HTTP method that Wayfinder's types don't know about. → Used plain `Route::get()` redirects.
+
+### Next
+- [ ] Tickets list and ticket detail pages (agents and customers)
+- [ ] Role-based authorization (policies)
+- [ ] Admin: add users to the organization
+- [ ] Re-render `docs/erd.png`
+
+---
+
 ## 2026-10-08 — Tenancy code
 
 ### Done
@@ -32,7 +58,7 @@ Newest entry on top. Add an entry at the end of each work session.
 - **A first round of fixes was too complex** (session peeking for a 403, memoisation, an overridable hook, constructor guards). → Reverted to the simple version above.
 
 ### Next
-- [ ] Authentication (login per subdomain) and tenant routes using the `organization` middleware. Attach the middleware to the tenant route group (or the whole `web` group, with the landing page moved out). Otherwise any route that leaves it out and loads the user throws `MissingOrganizationException`.
+- [x] Authentication (login per subdomain), with the `organization` middleware on the whole `web` group
 - [ ] Role-based authorization (policies)
 - [ ] Tenant-prefixed cache keys once caching is used
 - [ ] Ticket reference generation (per-organization sequence)
