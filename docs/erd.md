@@ -150,7 +150,7 @@ erDiagram
 
 ## Design decisions
 
-- **Multi-tenant by `organization_id`.** One database, with every tenant-owned row tagged by organization. This is simpler than a database per tenant, and Laravel global scopes make it easy to enforce.
+- **Multi-tenant by `organization_id`.** One database, with every tenant-owned row tagged by organization. This is simpler than a database per tenant, and Laravel global scopes make it easy to enforce. See [ADR-001](adr/0001-multi-tenancy.md).
 - **Roles are global** (Admin, Agent, Customer) with one role per user. If roles need to be per-organization or permissions more detailed, `spatie/laravel-permission` can replace this table.
 - **Customers are users too.** They have the Customer role, so requesters and agents share one table, and messages always point to `users`.
 - **SLA deadlines are stored on the ticket** (`first_response_due_at`, `resolution_due_at`). They're calculated once from the policy when the ticket is created, so later policy changes don't silently move existing deadlines, and breach checks are simple date comparisons.

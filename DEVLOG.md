@@ -5,6 +5,20 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-08 — ADR-001: multi-tenancy
+
+### Done
+- Wrote `docs/adr/0001-multi-tenancy.md`, the first Architecture Decision Record. It covers the single-database decision, the rejected options, trade-offs, safeguards and when to revisit.
+- Linked it from `CLAUDE.md`, `AGENTS.md`, `docs/erd.md` and the ERD entry below.
+
+### Decisions
+- **Big decisions are recorded as ADRs** in `docs/adr/` (numbered, dated, never rewritten; a new ADR supersedes an old one).
+
+### Next
+- [ ] Tenancy middleware and `BelongsToOrganization` trait (see the previous entry)
+
+---
+
 ## 2026-10-08 — Migrations, models, factories and test database
 
 ### Done
@@ -49,7 +63,7 @@ Newest entry on top. Add an entry at the end of each work session.
 - `docs/erd.md`: Mermaid ER diagram (GitHub renders it), relationship table and design notes. `docs/erd.png`: static render.
 
 ### Decisions
-- **Multi-tenancy: single database + single codebase (final).** Tenant resolved from the subdomain; every tenant-owned table has `organization_id`.
+- **Multi-tenancy: single database + single codebase (final, see [ADR-001](docs/adr/0001-multi-tenancy.md)).** Tenant resolved from the subdomain; every tenant-owned table has `organization_id`.
   Chosen over database-per-tenant for lower ops cost, simple migrations, easy cross-tenant reporting and a single pgvector index.
   Safeguards: a global scope/trait (never manual `where`), an index on `organization_id`, cross-tenant leak tests, and optionally Postgres row-level security.
 - **One global role per user** (Admin / Agent / Customer). Customers are users too, so requester, assignee and message author all point to `users`.
