@@ -5,6 +5,20 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-08 — Roles and ticket policy
+
+### Done
+- **`TicketPolicy`** (auto-discovered): `view` (admins and agents: any ticket in the organization; customers: only their own), `update` (status, priority, assignee: admins and agents), `delete` (admins only).
+- **The ticket detail page uses `Gate::authorize('view')`**, so a customer opening someone else's ticket now gets a 403 instead of a 404.
+- **Tests:** `TicketPolicyTest` (each role against each ability). Suite: 50 passing.
+
+### Decisions
+- **Roles stay as they are:** one role per user (`roles` table, `$user->hasRole()`), seeded as admin, agent and customer. No permissions package; three roles don't need one.
+- **The list still uses the `visibleTo()` scope:** policies decide about one ticket, scopes filter lists. Both say "customers only see their own".
+- **`update` and `delete` are ready for the next features** (replies, status changes, assignment).
+
+---
+
 ## 2026-10-08 — Tickets list and detail pages
 
 ### Done
@@ -20,7 +34,7 @@ Newest entry on top. Add an entry at the end of each work session.
 ### Next
 - [ ] Reply to a ticket; change status and assignee
 - [ ] Search and filters on the list
-- [ ] Role-based authorization (policies)
+- [x] Role-based authorization (policies)
 - [ ] Admin: add users to the organization
 
 ---

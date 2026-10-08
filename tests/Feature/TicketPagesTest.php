@@ -46,7 +46,7 @@ class TicketPagesTest extends TestCase
 
         $this->actingAs(User::factory()->customer()->create())
             ->get(route('tickets.show', $ticket->reference))
-            ->assertNotFound();
+            ->assertForbidden();
     }
 
     public function test_customers_do_not_see_internal_notes(): void

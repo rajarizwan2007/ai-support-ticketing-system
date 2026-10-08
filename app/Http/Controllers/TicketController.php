@@ -6,6 +6,7 @@ use App\Enums\MessageType;
 use App\Models\Role;
 use App\Models\Ticket;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -23,10 +24,11 @@ class TicketController extends Controller
 
     public function show(Request $request, string $reference): Response
     {
-        $ticket = Ticket::visibleTo($request->user())
-            ->where('reference', $reference)
+        $ticket = Ticket::where('reference', $reference)
             ->with('requester:id,name', 'assignee:id,name', 'category:id,name')
             ->firstOrFail();
+
+        Gate::authorize('view', $ticket);
 
         $messages = $ticket->messages()
             ->with('author:id,name')
