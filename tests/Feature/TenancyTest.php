@@ -124,17 +124,6 @@ class TenancyTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_a_message_takes_its_organization_from_its_ticket_not_the_current_one(): void
-    {
-        $acme = Organization::factory()->create()->makeCurrent();
-        $ticket = Ticket::factory()->create();
-
-        Organization::factory()->create()->makeCurrent();
-        $message = $ticket->messages()->create(['body' => 'Hello']);
-
-        $this->assertSame($acme->id, $message->organization_id);
-    }
-
     public function test_exists_rule_rejects_ids_from_another_organization(): void
     {
         Organization::factory()->create()->makeCurrent();

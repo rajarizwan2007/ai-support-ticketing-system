@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Enums\MessageType;
 use App\Models\Concerns\BelongsToOrganization;
-use App\Models\Scopes\OrganizationScope;
 use Database\Factories\MessageFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,18 +15,6 @@ class Message extends Model
 {
     /** @use HasFactory<MessageFactory> */
     use BelongsToOrganization, HasFactory;
-
-    /**
-     * A message always belongs to its ticket's organization.
-     */
-    protected static function booted(): void
-    {
-        static::creating(function (Message $message): void {
-            $message->organization_id = Ticket::withoutGlobalScope(OrganizationScope::class)
-                ->whereKey($message->ticket_id)
-                ->value('organization_id');
-        });
-    }
 
     /**
      * Get the attributes that should be cast.

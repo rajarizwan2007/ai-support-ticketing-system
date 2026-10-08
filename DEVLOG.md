@@ -8,14 +8,14 @@ Newest entry on top. Add an entry at the end of each work session.
 ## 2026-10-08 — Tenancy code
 
 ### Done
-- **`messages.organization_id`** (indexed, cascade on delete) added to the create-messages migration; `Message` copies it from its ticket on create. ERD updated (`docs/erd.png` is now stale).
+- **`messages.organization_id`** (indexed, cascade on delete) added to the create-messages migration; like other models it's filled from the current organization. ERD updated (`docs/erd.png` is now stale).
 - **`Organization::makeCurrent()` / `current()` / `currentId()` / `forgetCurrent()`:** the current tenant id lives in hidden Laravel Context.
 - **`BelongsToOrganization` trait** (`app/Models/Concerns`) on User, Category, SlaPolicy, Ticket, Message and KbArticle: adds `OrganizationScope` and fills `organization_id` on create.
 - **Fail closed:** with no current organization, scoped queries throw `MissingOrganizationException`, and creates fail on the `NOT NULL` column.
 - **`ResolveOrganization` middleware** (alias `organization`): subdomain → organization. Unknown, missing or nested subdomains get a 404. Not attached to any route yet; tenant routes will use it once auth exists.
 - **`ExistsInCurrentOrganization` validation rule** for foreign keys from requests.
 - **Factories** default `organization_id` to the current organization, so tests call `makeCurrent()` once and every factory follows. The seeder makes `acme` current.
-- **Tests:** `TenancyTest` (leak and fail-closed checks for every tenant model, middleware cases, message organization, the rule). Suite: 27 passing.
+- **Tests:** `TenancyTest` (leak and fail-closed checks for every tenant model, middleware cases, the rule). Suite: 26 passing.
 
 ### Decisions
 - **Hidden Context, not a static property or container singleton, holds the tenant.** It's per request, kept out of logs, and Laravel serializes it into queued jobs and restores it (flushing the old value first) before each job runs. So jobs keep their tenant, and a long-running worker can't leak one job's tenant into the next.
@@ -26,7 +26,7 @@ Newest entry on top. Add an entry at the end of each work session.
 - **An organization's relations only work while it is current.** `$globex->tickets` returns nothing while acme is current, and throws with no tenant. That's consistent with failing closed, but admin or billing code that loops over organizations must make each one current (or bypass the scope deliberately). Noted on the `Organization` class.
 
 ### Problems & fixes (from a code review of the tenancy commit)
-- **Messages could get the wrong organization** (the current tenant's, not the ticket's). → A `creating` hook on `Message` copies the ticket's organization.
+- **A `Message` hook that copied the ticket's organization** (added for queued jobs) let a request write a message into another tenant's ticket. → Removed. Jobs already restore their tenant via Context, so messages simply use the current organization.
 - **Validation rule accepted a JSON `true` as id 1.** → Only integers or digit strings pass.
 - **The seeder's `WithoutModelEvents` disabled the tenancy hooks.** → Removed.
 - **A first round of fixes was too complex** (session peeking for a 403, memoisation, an overridable hook, constructor guards). → Reverted to the simple version above.
