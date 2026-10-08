@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\MessageType;
+use App\Models\Concerns\BelongsToOrganization;
 use Database\Factories\MessageFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Message extends Model
 {
     /** @use HasFactory<MessageFactory> */
-    use HasFactory;
+    use BelongsToOrganization, HasFactory;
 
     /**
      * Get the attributes that should be cast.
@@ -26,6 +27,14 @@ class Message extends Model
             'type' => MessageType::class,
             'is_ai_generated' => 'boolean',
         ];
+    }
+
+    /**
+     * @return BelongsTo<Organization, $this>
+     */
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
     }
 
     /**

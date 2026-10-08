@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\Priority;
+use App\Models\Concerns\BelongsToOrganization;
 use Database\Factories\SlaPolicyFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,7 +22,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class SlaPolicy extends Model
 {
     /** @use HasFactory<SlaPolicyFactory> */
-    use HasFactory;
+    use BelongsToOrganization, HasFactory;
 
     /**
      * Get the attributes that should be cast.

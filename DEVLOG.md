@@ -5,6 +5,34 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-08 — Tenancy code
+
+### Done
+- **`messages.organization_id`** (indexed, cascade on delete) added to the create-messages migration; the factory copies it from the ticket. ERD updated (`docs/erd.png` is now stale).
+- **`Organization::makeCurrent()` / `current()` / `currentId()` / `forgetCurrent()`:** the current tenant id lives in hidden Laravel Context.
+- **`BelongsToOrganization` trait** (`app/Models/Concerns`) on User, Category, SlaPolicy, Ticket, Message and KbArticle: adds `OrganizationScope` and fills `organization_id` on create.
+- **Fail closed:** with no current organization, scoped queries and creates throw `MissingOrganizationException`.
+- **`ResolveOrganization` middleware** (alias `organization`): subdomain → organization. Unknown, missing or nested subdomains get a 404; a logged-in user from another organization gets a 403. Not attached to any route yet; tenant routes will use it once auth exists.
+- **`ExistsInCurrentOrganization` validation rule** for foreign keys from requests.
+- **Factories** default `organization_id` to the current organization, so tests call `makeCurrent()` once and every factory follows. The seeder makes `acme` current.
+- **Tests:** `TenancyTest` (leak and fail-closed checks for every tenant model, middleware cases, the rule). Suite: 27 passing.
+
+### Decisions
+- **Hidden Context, not a static property or container singleton, holds the tenant.** It's per request, kept out of logs, and Laravel serializes it into queued jobs and restores it (flushing the old value first) before each job runs. So jobs keep their tenant, and a long-running worker can't leak one job's tenant into the next.
+- **The middleware runs before auth and route-model binding** (`prependToPriorityList` before `AuthenticatesRequests`), because both run tenant-scoped queries.
+- **Users are tenant-scoped too.** A session from another tenant's subdomain loads no user (guest). The 403 covers users already resolved by other means.
+- **Factories may bypass the scope** (`MessageFactory` reads its ticket with `withoutGlobalScope`) because they copy the parent's organization; app code must not.
+- **Edited the existing messages migration** instead of adding a new one: no production data yet, and dev is reset with `migrate:fresh --seed`.
+
+### Next
+- [ ] Authentication (login per subdomain) and tenant routes using the `organization` middleware
+- [ ] Role-based authorization (policies)
+- [ ] Tenant-prefixed cache keys once caching is used
+- [ ] Ticket reference generation (per-organization sequence)
+- [ ] Re-render `docs/erd.png`
+
+---
+
 ## 2026-10-08 — ADR-001: multi-tenancy
 
 ### Done
@@ -19,9 +47,9 @@ Newest entry on top. Add an entry at the end of each work session.
 - **The review found that `messages` has no `organization_id`**, although the ADR says every tenant-owned table does. → The ADR keeps the rule; the column is added in the tenancy task.
 
 ### Next
-- [ ] Add `organization_id` (indexed) to `messages`, plus factory and seeder updates
-- [ ] Tenancy middleware (subdomain → organization, 403 if the user belongs elsewhere) and fail-closed `BelongsToOrganization` trait
-- [ ] Same-tenant validation for foreign keys from requests, and cross-tenant leak tests
+- [x] Add `organization_id` (indexed) to `messages`, plus factory and seeder updates
+- [x] Tenancy middleware (subdomain → organization, 403 if the user belongs elsewhere) and fail-closed `BelongsToOrganization` trait
+- [x] Same-tenant validation for foreign keys from requests, and cross-tenant leak tests
 
 ---
 

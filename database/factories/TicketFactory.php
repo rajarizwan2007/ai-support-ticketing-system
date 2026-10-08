@@ -23,7 +23,7 @@ class TicketFactory extends Factory
     public function definition(): array
     {
         return [
-            'organization_id' => Organization::factory(),
+            'organization_id' => fn () => Organization::currentId() ?? Organization::factory(),
             'reference' => 'TKT-'.fake()->unique()->numberBetween(1000, 999999),
             'requester_id' => fn (array $attributes) => User::factory()->customer()->state([
                 'organization_id' => $attributes['organization_id'],

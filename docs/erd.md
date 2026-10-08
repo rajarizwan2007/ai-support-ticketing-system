@@ -9,6 +9,7 @@ erDiagram
     organizations ||--o{ sla_policies : defines
     organizations ||--o{ tickets : owns
     organizations ||--o{ kb_articles : publishes
+    organizations ||--o{ messages : owns
 
     roles ||--o{ users : "assigned to"
 
@@ -107,6 +108,7 @@ erDiagram
 
     messages {
         bigint id PK
+        bigint organization_id FK
         bigint ticket_id FK
         bigint user_id FK "nullable for system messages"
         string type "reply, internal_note, system"

@@ -22,7 +22,7 @@ class CategoryFactory extends Factory
         $name = fake()->unique()->words(2, true);
 
         return [
-            'organization_id' => Organization::factory(),
+            'organization_id' => fn () => Organization::currentId() ?? Organization::factory(),
             'parent_id' => null,
             'name' => Str::title($name),
             'slug' => Str::slug($name),

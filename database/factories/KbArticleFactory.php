@@ -24,7 +24,7 @@ class KbArticleFactory extends Factory
         $title = rtrim(fake()->unique()->sentence(5), '.');
 
         return [
-            'organization_id' => Organization::factory(),
+            'organization_id' => fn () => Organization::currentId() ?? Organization::factory(),
             'category_id' => null,
             'author_id' => fn (array $attributes) => User::factory()->agent()->state([
                 'organization_id' => $attributes['organization_id'],

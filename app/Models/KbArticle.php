@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\KbArticleStatus;
+use App\Models\Concerns\BelongsToOrganization;
 use Database\Factories\KbArticleFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class KbArticle extends Model
 {
     /** @use HasFactory<KbArticleFactory> */
-    use HasFactory;
+    use BelongsToOrganization, HasFactory;
 
     /**
      * Get the attributes that should be cast.

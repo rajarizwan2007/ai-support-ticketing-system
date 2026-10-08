@@ -27,7 +27,7 @@ class DatabaseSeeder extends Seeder
         $organization = Organization::factory()->create([
             'name' => 'Acme Inc',
             'slug' => 'acme',
-        ]);
+        ])->makeCurrent();
 
         User::factory()->admin()->for($organization)->create([
             'name' => 'Admin User',

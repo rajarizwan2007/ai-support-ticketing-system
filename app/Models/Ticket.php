@@ -6,6 +6,7 @@ use App\Enums\Priority;
 use App\Enums\Sentiment;
 use App\Enums\TicketChannel;
 use App\Enums\TicketStatus;
+use App\Models\Concerns\BelongsToOrganization;
 use Database\Factories\TicketFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -36,7 +37,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Ticket extends Model
 {
     /** @use HasFactory<TicketFactory> */
-    use HasFactory, SoftDeletes;
+    use BelongsToOrganization, HasFactory, SoftDeletes;
 
     /**
      * Get the attributes that should be cast.

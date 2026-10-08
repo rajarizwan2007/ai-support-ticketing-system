@@ -27,7 +27,7 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'organization_id' => Organization::factory(),
+            'organization_id' => fn () => Organization::currentId() ?? Organization::factory(),
             'role_id' => fn () => Role::findOrCreateBySlug(Role::CUSTOMER)->id,
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),

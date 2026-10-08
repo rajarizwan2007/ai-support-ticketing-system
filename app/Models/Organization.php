@@ -7,12 +7,46 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Context;
 
 #[Fillable(['name', 'slug', 'settings'])]
 class Organization extends Model
 {
     /** @use HasFactory<OrganizationFactory> */
     use HasFactory;
+
+    /**
+     * Hidden Context key holding the current organization's id. Context is
+     * per request and is carried into queued jobs automatically.
+     */
+    private const CURRENT_KEY = 'organization_id';
+
+    /**
+     * Make this the organization that tenant-owned queries are scoped to.
+     */
+    public function makeCurrent(): static
+    {
+        Context::addHidden(self::CURRENT_KEY, $this->getKey());
+
+        return $this;
+    }
+
+    public static function currentId(): ?int
+    {
+        return Context::getHidden(self::CURRENT_KEY);
+    }
+
+    public static function current(): ?self
+    {
+        $organizationId = static::currentId();
+
+        return $organizationId === null ? null : static::find($organizationId);
+    }
+
+    public static function forgetCurrent(): void
+    {
+        Context::forgetHidden(self::CURRENT_KEY);
+    }
 
     /**
      * Get the attributes that should be cast.

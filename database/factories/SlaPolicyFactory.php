@@ -32,7 +32,7 @@ class SlaPolicyFactory extends Factory
     public function definition(): array
     {
         return [
-            'organization_id' => Organization::factory(),
+            'organization_id' => fn () => Organization::currentId() ?? Organization::factory(),
             ...$this->forPriority(fake()->randomElement(Priority::cases())),
             'business_hours_only' => false,
             'is_active' => true,

@@ -17,14 +17,22 @@ class DataModelTest extends TestCase
 {
     use RefreshDatabase;
 
+    private Organization $organization;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->organization = Organization::factory()->create()->makeCurrent();
+    }
+
     public function test_ticket_factory_keeps_requester_and_assignee_in_the_ticket_organization(): void
     {
-        $organization = Organization::factory()->create();
+        $ticket = Ticket::factory()->assigned()->create();
 
-        $ticket = Ticket::factory()->for($organization)->assigned()->create();
-
-        $this->assertTrue($ticket->requester->organization->is($organization));
-        $this->assertTrue($ticket->assignee->organization->is($organization));
+        $this->assertTrue($ticket->organization->is($this->organization));
+        $this->assertTrue($ticket->requester->organization->is($this->organization));
+        $this->assertTrue($ticket->assignee->organization->is($this->organization));
         $this->assertTrue($ticket->assignee->hasRole('agent'));
         $this->assertSame(1, Organization::count());
     }
@@ -59,20 +67,21 @@ class DataModelTest extends TestCase
 
     public function test_deleting_an_organization_removes_all_of_its_data(): void
     {
-        $organization = Organization::factory()->create();
-        $ticket = Ticket::factory()->for($organization)->assigned()->create();
+        $ticket = Ticket::factory()->assigned()->create();
         Message::factory()->for($ticket)->create();
         Message::factory()->for($ticket)->system()->create();
-        KbArticle::factory()->for($organization)->published()->create();
-        $otherTicket = Ticket::factory()->create();
+        KbArticle::factory()->published()->create();
+        $otherTicket = Ticket::factory()->for(Organization::factory())->create();
 
-        $organization->delete();
+        $this->organization->delete();
 
-        $this->assertSame(0, User::where('organization_id', $organization->id)->count());
-        $this->assertSame(0, Ticket::withTrashed()->where('organization_id', $organization->id)->count());
-        $this->assertSame(0, Message::where('ticket_id', $ticket->id)->count());
+        $this->assertSame(0, User::count());
+        $this->assertSame(0, Ticket::withTrashed()->count());
+        $this->assertSame(0, Message::count());
         $this->assertSame(0, KbArticle::count());
-        $this->assertTrue($otherTicket->fresh()->exists);
+
+        $otherTicket->organization->makeCurrent();
+        $this->assertNotNull($otherTicket->fresh());
     }
 
     public function test_system_messages_have_no_author(): void
