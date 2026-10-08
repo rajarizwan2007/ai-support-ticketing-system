@@ -10,12 +10,18 @@ Newest entry on top. Add an entry at the end of each work session.
 ### Done
 - Wrote `docs/adr/0001-multi-tenancy.md`, the first Architecture Decision Record. It covers the single-database decision, the rejected options, trade-offs, safeguards and when to revisit.
 - Linked it from `CLAUDE.md`, `AGENTS.md`, `docs/erd.md` and the ERD entry below.
+- Revised it after a code review: fail-closed scope, user-vs-subdomain check, same-tenant validation of foreign keys, tenant-prefixed cache keys, email-enumeration and vector-search caveats, local `acme.localhost` setup.
 
 ### Decisions
-- **Big decisions are recorded as ADRs** in `docs/adr/` (numbered, dated, never rewritten; a new ADR supersedes an old one).
+- **Big decisions are recorded as ADRs** in `docs/adr/` (numbered, dated; once settled, never rewritten; a new ADR supersedes an old one). Implementation progress lives here in the dev log, not in the ADR.
+
+### Problems & fixes
+- **The review found that `messages` has no `organization_id`**, although the ADR says every tenant-owned table does. → The ADR keeps the rule; the column is added in the tenancy task.
 
 ### Next
-- [ ] Tenancy middleware and `BelongsToOrganization` trait (see the previous entry)
+- [ ] Add `organization_id` (indexed) to `messages`, plus factory and seeder updates
+- [ ] Tenancy middleware (subdomain → organization, 403 if the user belongs elsewhere) and fail-closed `BelongsToOrganization` trait
+- [ ] Same-tenant validation for foreign keys from requests, and cross-tenant leak tests
 
 ---
 
