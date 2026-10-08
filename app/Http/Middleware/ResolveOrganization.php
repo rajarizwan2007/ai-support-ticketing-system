@@ -10,7 +10,9 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Resolves the tenant from the subdomain (acme.<app host> → slug "acme")
  * and makes it current. There is no default tenant: an unknown or missing
- * subdomain is a 404. See docs/adr/0001-multi-tenancy.md.
+ * subdomain is a 404. Users are tenant-scoped, so a session from another
+ * organization finds no user and the request is a guest.
+ * See docs/adr/0001-multi-tenancy.md.
  */
 class ResolveOrganization
 {
@@ -26,11 +28,6 @@ class ResolveOrganization
         abort_if($organization === null, 404);
 
         $organization->makeCurrent();
-
-        abort_if(
-            $request->user() !== null && $request->user()->organization_id !== $organization->id,
-            403,
-        );
 
         return $next($request);
     }

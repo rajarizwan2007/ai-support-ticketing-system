@@ -41,7 +41,7 @@ Many organizations (tenants) share one support system. Each must only ever see i
 
 - **`BelongsToOrganization` trait:** a global scope plus `organization_id` filled in automatically on create.
 - **Fail closed:** if no tenant is set (queue jobs, Artisan commands, scheduled tasks), scoped queries throw an exception instead of returning every tenant's rows. Cross-tenant work must opt out explicitly (e.g. `withoutGlobalScope`), and queued jobs carry the organization id and set it before running.
-- **Subdomain middleware:** resolves the organization from the subdomain and rejects the request (403) if the logged-in user belongs to a different organization.
+- **Subdomain middleware:** resolves the organization from the subdomain. Users are tenant-scoped, so a session from another organization finds no user and is treated as a guest.
 - **Same-tenant references:** every foreign key that comes from user input (`assignee_id`, `requester_id`, `category_id`, `sla_policy_id`, `parent_id`, `author_id`) is validated to belong to the current organization.
 - **`organization_id` is not mass-assignable**, so a request can't move a record to another tenant.
 - **Tenant-prefixed cache keys**, so cached data is never shared between tenants.

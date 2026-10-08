@@ -22,23 +22,13 @@ class MessageFactory extends Factory
     {
         return [
             'ticket_id' => Ticket::factory(),
-            'organization_id' => fn (array $attributes) => $this->ticket($attributes)->organization_id,
-            'user_id' => fn (array $attributes) => $this->ticket($attributes)->requester_id,
+            'user_id' => fn (array $attributes) => Ticket::withoutGlobalScope(OrganizationScope::class)
+                ->whereKey($attributes['ticket_id'])
+                ->value('requester_id'),
             'type' => MessageType::Reply,
             'body' => fake()->paragraph(),
             'is_ai_generated' => false,
         ];
-    }
-
-    /**
-     * The message's ticket, read past the tenant scope so the message always
-     * copies its organization from the ticket.
-     *
-     * @param  array<string, mixed>  $attributes
-     */
-    private function ticket(array $attributes): Ticket
-    {
-        return Ticket::withoutGlobalScope(OrganizationScope::class)->findOrFail($attributes['ticket_id']);
     }
 
     /**

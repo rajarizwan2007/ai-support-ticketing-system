@@ -12,7 +12,9 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\Rules\ExistsInCurrentOrganization;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Validator;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -87,7 +89,7 @@ class TenancyTest extends TestCase
 
     public function test_creating_a_record_without_a_current_organization_fails(): void
     {
-        $this->expectException(MissingOrganizationException::class);
+        $this->expectException(QueryException::class);
 
         Category::create(['name' => 'Billing', 'slug' => 'billing']);
     }
@@ -108,21 +110,29 @@ class TenancyTest extends TestCase
         $this->get('http://www.acme.ticketing.test/tenancy-probe')->assertNotFound();
     }
 
-    public function test_middleware_lets_a_user_into_their_own_organization(): void
-    {
-        $acme = Organization::factory()->create(['slug' => 'acme'])->makeCurrent();
-        $user = User::factory()->create();
-
-        $this->actingAs($user)->get('http://acme.ticketing.test/tenancy-probe')->assertOk();
-    }
-
-    public function test_middleware_forbids_a_user_from_another_organization(): void
+    public function test_a_session_user_from_another_organization_is_a_guest(): void
     {
         Organization::factory()->create(['slug' => 'acme']);
         Organization::factory()->create(['slug' => 'globex'])->makeCurrent();
         $globexUser = User::factory()->create();
+        Organization::forgetCurrent();
 
-        $this->actingAs($globexUser)->get('http://acme.ticketing.test/tenancy-probe')->assertForbidden();
+        $this->withSession([Auth::guard()->getName() => $globexUser->id])
+            ->get('http://acme.ticketing.test/tenancy-probe')
+            ->assertOk();
+
+        $this->assertGuest();
+    }
+
+    public function test_a_message_takes_its_organization_from_its_ticket_not_the_current_one(): void
+    {
+        $acme = Organization::factory()->create()->makeCurrent();
+        $ticket = Ticket::factory()->create();
+
+        Organization::factory()->create()->makeCurrent();
+        $message = $ticket->messages()->create(['body' => 'Hello']);
+
+        $this->assertSame($acme->id, $message->organization_id);
     }
 
     public function test_exists_rule_rejects_ids_from_another_organization(): void
@@ -138,5 +148,6 @@ class TenancyTest extends TestCase
         $this->assertTrue(Validator::make(['category_id' => $ownCategory->id], $rules)->passes());
         $this->assertTrue(Validator::make(['category_id' => $otherCategory->id], $rules)->fails());
         $this->assertTrue(Validator::make(['category_id' => 'abc'], $rules)->fails());
+        $this->assertTrue(Validator::make(['category_id' => true], $rules)->fails());
     }
 }

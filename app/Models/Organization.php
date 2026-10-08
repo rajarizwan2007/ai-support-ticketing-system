@@ -9,6 +9,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Context;
 
+/**
+ * The tenant. Its hasMany relations (users, tickets, ...) also pass through the
+ * tenant scope, so they only return rows while this organization is current;
+ * for any other organization they return nothing, and with none they throw.
+ */
 #[Fillable(['name', 'slug', 'settings'])]
 class Organization extends Model
 {

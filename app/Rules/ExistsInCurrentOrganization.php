@@ -28,9 +28,7 @@ class ExistsInCurrentOrganization implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $id = filter_var($value, FILTER_VALIDATE_INT);
-
-        if ($id === false || ! $this->model::query()->whereKey($id)->exists()) {
+        if (! (is_int($value) || (is_string($value) && ctype_digit($value))) || ! $this->model::query()->whereKey($value)->exists()) {
             $fail('validation.exists')->translate();
         }
     }
