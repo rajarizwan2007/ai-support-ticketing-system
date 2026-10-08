@@ -1,6 +1,8 @@
-import { Head } from '@inertiajs/react';
+import { Form, Head, router } from '@inertiajs/react';
+import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
-import { index } from '@/routes/tickets';
+import { Button } from '@/components/ui/button';
+import { index, reply, update } from '@/routes/tickets';
 
 type Ticket = {
     reference: string;
@@ -22,9 +24,19 @@ type Message = {
     author: { name: string } | null;
 };
 
-type Props = { ticket: Ticket; messages: Message[] };
+type Props = {
+    ticket: Ticket;
+    messages: Message[];
+    canUpdate: boolean;
+    statuses: string[];
+};
 
-export default function TicketsShow({ ticket, messages }: Props) {
+export default function TicketsShow({
+    ticket,
+    messages,
+    canUpdate,
+    statuses,
+}: Props) {
     return (
         <>
             <Head title={ticket.reference} />
@@ -35,9 +47,30 @@ export default function TicketsShow({ ticket, messages }: Props) {
                     </p>
                     <h1 className="text-xl font-semibold">{ticket.subject}</h1>
                     <div className="mt-2 flex flex-wrap gap-2 text-sm">
-                        <Badge variant="secondary">
-                            {ticket.status.replace('_', ' ')}
-                        </Badge>
+                        {canUpdate ? (
+                            <select
+                                aria-label="Status"
+                                value={ticket.status}
+                                onChange={(event) =>
+                                    router.patch(
+                                        update.url(ticket.reference),
+                                        { status: event.target.value },
+                                        { preserveScroll: true },
+                                    )
+                                }
+                                className="rounded-md border bg-background px-2 py-0.5 text-xs"
+                            >
+                                {statuses.map((status) => (
+                                    <option key={status} value={status}>
+                                        {status.replace('_', ' ')}
+                                    </option>
+                                ))}
+                            </select>
+                        ) : (
+                            <Badge variant="secondary">
+                                {ticket.status.replace('_', ' ')}
+                            </Badge>
+                        )}
                         <Badge variant="outline">{ticket.priority}</Badge>
                         <span>Requester: {ticket.requester?.name}</span>
                         <span>Assignee: {ticket.assignee?.name ?? '—'}</span>
@@ -72,6 +105,42 @@ export default function TicketsShow({ ticket, messages }: Props) {
                         </div>
                     ))}
                 </div>
+
+                <Form
+                    {...reply.form(ticket.reference)}
+                    resetOnSuccess
+                    options={{ preserveScroll: true }}
+                    className="flex flex-col gap-2"
+                >
+                    {({ processing, errors }) => (
+                        <>
+                            <textarea
+                                name="body"
+                                rows={4}
+                                required
+                                aria-label="Reply"
+                                placeholder="Write a reply…"
+                                className="rounded-md border bg-background p-2 text-sm"
+                            />
+                            <InputError message={errors.body} />
+                            <div className="flex items-center gap-4">
+                                <Button type="submit" disabled={processing}>
+                                    Send
+                                </Button>
+                                {canUpdate && (
+                                    <label className="flex items-center gap-2 text-sm">
+                                        <input
+                                            type="checkbox"
+                                            name="internal"
+                                            value="1"
+                                        />
+                                        Internal note
+                                    </label>
+                                )}
+                            </div>
+                        </>
+                    )}
+                </Form>
             </div>
         </>
     );

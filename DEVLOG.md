@@ -5,6 +5,28 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-08 — Ticket replies and status changes
+
+### Done
+- **Reply form** on the ticket page. Anyone who can view the ticket can reply. Admins and agents can tick "Internal note" (hidden from customers).
+- **Status dropdown** for admins and agents, saved on change. Each change adds a system message ("Status changed to resolved by Agent User.").
+- **Routes:** `POST /tickets/{ticket}/messages` (`reply`) and `PATCH /tickets/{ticket}` (`update`). Tickets now use route-model binding by reference (`{ticket:reference}`), still limited to the current organization.
+- **Tests:** 7 more in `TicketPagesTest` (replies, internal notes, status changes, 403s, invalid status). Suite: 57 passing.
+
+### Decisions
+- **Still one controller** (`TicketController`: index, show, reply, update) with inline validation; no Form Request classes.
+- **Internal notes are decided on the server:** a note is internal only if the box is ticked *and* the user passes the `update` rule, so a customer can't post one by sending the field.
+- **Replies use the `view` rule** (if you can see a ticket you can reply); status changes use `update`.
+
+### Next
+- [ ] Change assignee and priority (same `update()` method)
+- [ ] SLA timestamps (first response, resolved, closed)
+- [ ] Email notifications; reopen a ticket when the customer replies
+- [ ] Search and filters on the list
+- [ ] Admin: add users to the organization
+
+---
+
 ## 2026-10-08 — Roles and ticket policy
 
 ### Done
