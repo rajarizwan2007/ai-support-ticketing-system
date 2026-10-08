@@ -5,6 +5,29 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-08 — Database design (ERD)
+
+### Done
+- Designed the core data model: organizations, users, roles, tickets, messages, categories, SLA policies and KB articles.
+- `docs/erd.md`: Mermaid ER diagram (GitHub renders it), relationship table and design notes. `docs/erd.png`: static render.
+
+### Decisions
+- **Multi-tenancy: single database + single codebase (final).** Tenant resolved from the subdomain; every tenant-owned table has `organization_id`.
+  Chosen over database-per-tenant for lower ops cost, simple migrations, easy cross-tenant reporting and a single pgvector index.
+  Safeguards: a global scope/trait (never manual `where`), an index on `organization_id`, cross-tenant leak tests, and optionally Postgres row-level security.
+- **One global role per user** (Admin / Agent / Customer). Customers are users too, so requester, assignee and message author all point to `users`.
+- **SLA deadlines are stored on the ticket** when it's created, so policy changes don't move existing deadlines.
+- **Status, priority and channel are strings backed by PHP enums**, not Postgres enums, so they're easier to change.
+- **pgvector `embedding`** on tickets and KB articles, for similar-ticket search and article suggestions. The dimension waits on the choice of embedding model.
+- **Internal notes are `messages.type = internal_note`**, kept in the same thread.
+
+### Next
+- [ ] Choose the embedding model (sets the vector dimension)
+- [ ] Write migrations, models, enums and factories from the ERD
+- [ ] Decide on attachments, tags and the ticket event log
+
+---
+
 ## 2026-10-07 — Laravel Boost (AI-assisted development)
 
 ### Done

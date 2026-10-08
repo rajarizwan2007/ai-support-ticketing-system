@@ -155,4 +155,5 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
   - `docker compose exec postgres psql -U ticketing`
 - Stack: PHP 8.4-FPM (`app`), nginx (`nginx`, http://localhost:8088), PostgreSQL 17 + pgvector (`postgres`), Redis 7 (`redis`). See `docker-compose.yml`.
 - Laravel uses `pgsql` for the database and Redis for cache, sessions and queue.
+- **Multi-tenancy: single database.** The tenant is resolved from the subdomain. Every tenant-owned table has an indexed `organization_id`, enforced via a global scope/trait (never manual `where` clauses). Do not propose database-per-tenant. Data model: `docs/erd.md`.
 - **Dev log:** at the end of each work session, add an entry at the top of `DEVLOG.md` (Done / Decisions / Problems & fixes / Next).
