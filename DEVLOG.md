@@ -20,6 +20,7 @@ Newest entry on top. Add an entry at the end of each work session.
 - **Laravel's default `config/filesystems.php` passed `env()` (mixed) to `rtrim()`.** → Cast to string.
 - **`Organization::currentId()`** → documented as an unsigned id.
 - **`composer require` hit GitHub's rate limit (HTTP 429)** while downloading PHPStan. → Retried a minute later.
+- **Review of this commit:** setting a ticket to its current status still logged "Status changed…" → only logged when it actually changes (`wasChanged('status')`, with a test). The single-word category names could run out of unique values → back to two words. The trait's error now names the saved model's class.
 
 ---
 

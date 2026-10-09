@@ -135,4 +135,14 @@ class TicketPagesTest extends TestCase
             ->patch(route('tickets.update', $ticket->reference), ['status' => 'exploded'])
             ->assertSessionHasErrors('status');
     }
+
+    public function test_setting_the_same_status_adds_no_message(): void
+    {
+        $ticket = Ticket::factory()->create(['status' => 'open']);
+
+        $this->actingAs(User::factory()->agent()->create())
+            ->patch(route('tickets.update', $ticket->reference), ['status' => 'open']);
+
+        $this->assertSame(0, $ticket->messages()->count());
+    }
 }

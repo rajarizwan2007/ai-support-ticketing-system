@@ -17,7 +17,7 @@ trait BelongsToOrganization
         static::addGlobalScope(new OrganizationScope);
 
         static::creating(function (self $model): void {
-            $model->organization_id ??= Organization::currentId() ?? throw MissingOrganizationException::forModel(static::class);
+            $model->organization_id ??= Organization::currentId() ?? throw MissingOrganizationException::forModel($model::class);
         });
     }
 }

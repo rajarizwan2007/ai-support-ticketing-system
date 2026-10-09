@@ -19,7 +19,7 @@ class CategoryFactory extends Factory
      */
     public function definition(): array
     {
-        $name = fake()->unique()->word();
+        $name = fake()->unique()->word().' '.fake()->word();
 
         return [
             'organization_id' => fn () => Organization::currentId() ?? Organization::factory(),
