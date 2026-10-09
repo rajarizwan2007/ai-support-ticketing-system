@@ -75,7 +75,7 @@ class TicketController extends Controller
 
         $ticket->messages()->create([
             'type' => MessageType::System,
-            'body' => 'Status changed to '.str_replace('_', ' ', $ticket->status->value).' by '.$request->user()->name.'.',
+            'body' => 'Status changed to '.str_replace('_', ' ', $validated['status']).' by '.$request->user()->name.'.',
         ]);
 
         return back();

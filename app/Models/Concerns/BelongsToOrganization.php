@@ -2,9 +2,9 @@
 
 namespace App\Models\Concerns;
 
+use App\Exceptions\MissingOrganizationException;
 use App\Models\Organization;
 use App\Models\Scopes\OrganizationScope;
-use Illuminate\Database\Eloquent\Model;
 
 /**
  * Scopes every query to the current organization and fills
@@ -16,8 +16,8 @@ trait BelongsToOrganization
     {
         static::addGlobalScope(new OrganizationScope);
 
-        static::creating(function (Model $model): void {
-            $model->organization_id ??= Organization::currentId();
+        static::creating(function (self $model): void {
+            $model->organization_id ??= Organization::currentId() ?? throw MissingOrganizationException::forModel(static::class);
         });
     }
 }

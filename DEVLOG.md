@@ -5,6 +5,58 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-08 — Pint and Larastan
+
+### Done
+- **Pint:** `pint.json` (`laravel` preset) and `composer lint`. The code already passed.
+- **Larastan:** `larastan/larastan` (dev), `phpstan.neon` at **level 7** over `app`, `bootstrap/app.php`, `config`, `database` and `routes` (same as the React starter kit), and `composer analyse`. Result: no errors.
+
+### Problems & fixes (10 findings)
+- **The status message read `$ticket->status->value`** after the update, which Larastan couldn't type. → Uses the validated status string.
+- **The trait's `creating` hook was typed as a plain `Model`** (no `organization_id`). → Typed as `self`.
+- **The trait could assign `null` with no current organization.** → Throws `MissingOrganizationException` instead of relying on the `NOT NULL` error, which also gives a clearer message. `TenancyTest` updated.
+- **`OrganizationScope` didn't declare its generic type.** → `@implements Scope<Model>`.
+- **`CategoryFactory` used `words(2, true)`** (typed `array|string`). → A single fake word.
+- **Laravel's default `config/filesystems.php` passed `env()` (mixed) to `rtrim()`.** → Cast to string.
+- **`Organization::currentId()`** → documented as an unsigned id.
+- **`composer require` hit GitHub's rate limit (HTTP 429)** while downloading PHPStan. → Retried a minute later.
+
+---
+
+## 2026-10-08 — Role permission tests (HTTP level)
+
+### Done
+- **`RolePermissionsTest`:** one data-driven test, run once per role, through real requests:
+
+  | Role | Open someone else's ticket | Change status | Ticked "internal note" saved as |
+  |---|---|---|---|
+  | admin | 200 | allowed (302) | internal note |
+  | agent | 200 | allowed (302) | internal note |
+  | customer | 403 | 403 | normal reply |
+- Suite: 63 passing.
+
+### Decisions
+- **Roles are tested at two levels:** `TicketPolicyTest` checks the policy rules directly, and `RolePermissionsTest` checks the pages. A new role or ability means adding a column to the table above.
+
+### Problems & fixes
+- **PHPUnit 12 warns when a data set has more values than the test method takes.** → One test per role that checks all three things.
+
+---
+
+## 2026-10-08 — Tenant isolation tests (HTTP level)
+
+### Done
+- **`TenantIsolationTest`:** an acme admin on acme's subdomain:
+  - sees only acme's tickets in the list;
+  - gets a 404 opening, replying to or updating a globex ticket, and globex's ticket is left unchanged;
+  - opens acme's own ticket when both organizations use the same reference (`TKT-1000`).
+- Suite: 60 passing.
+
+### Decisions
+- **Isolation is tested at two levels:** `TenancyTest` for every tenant model (scope, fail-closed, middleware), and `TenantIsolationTest` through real requests to the pages. New tenant pages should add a case here.
+
+---
+
 ## 2026-10-08 — Ticket replies and status changes
 
 ### Done
@@ -95,7 +147,7 @@ Newest entry on top. Add an entry at the end of each work session.
 - **`messages.organization_id`** (indexed, cascade on delete) added to the create-messages migration; like other models it's filled from the current organization. ERD updated (`docs/erd.png` is now stale).
 - **`Organization::makeCurrent()` / `current()` / `currentId()` / `forgetCurrent()`:** the current tenant id lives in hidden Laravel Context.
 - **`BelongsToOrganization` trait** (`app/Models/Concerns`) on User, Category, SlaPolicy, Ticket, Message and KbArticle: adds `OrganizationScope` and fills `organization_id` on create.
-- **Fail closed:** with no current organization, scoped queries throw `MissingOrganizationException`, and creates fail on the `NOT NULL` column.
+- **Fail closed:** with no current organization, scoped queries and creates throw `MissingOrganizationException`.
 - **`ResolveOrganization` middleware** (alias `organization`): subdomain → organization. Unknown, missing or nested subdomains get a 404. Not attached to any route yet; tenant routes will use it once auth exists.
 - **`ExistsInCurrentOrganization` validation rule** for foreign keys from requests.
 - **Factories** default `organization_id` to the current organization, so tests call `makeCurrent()` once and every factory follows. The seeder makes `acme` current.

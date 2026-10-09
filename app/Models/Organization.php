@@ -36,6 +36,9 @@ class Organization extends Model
         return $this;
     }
 
+    /**
+     * @return int<0, max>|null
+     */
     public static function currentId(): ?int
     {
         return Context::getHidden(self::CURRENT_KEY);

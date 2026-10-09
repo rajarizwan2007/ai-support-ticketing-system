@@ -12,7 +12,6 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\Rules\ExistsInCurrentOrganization;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -89,7 +88,7 @@ class TenancyTest extends TestCase
 
     public function test_creating_a_record_without_a_current_organization_fails(): void
     {
-        $this->expectException(QueryException::class);
+        $this->expectException(MissingOrganizationException::class);
 
         Category::create(['name' => 'Billing', 'slug' => 'billing']);
     }
