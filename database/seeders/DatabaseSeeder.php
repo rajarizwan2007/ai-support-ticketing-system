@@ -15,30 +15,44 @@ use Illuminate\Database\Seeder;
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Seed the application's database.
+     * Seed the roles and two demo organizations, so tenant isolation can be
+     * checked by hand (acme.localhost and globex.localhost).
      */
     public function run(): void
     {
         $this->call(RoleSeeder::class);
 
+        $this->seedOrganization('Acme Inc', 'acme', 'example.com');
+        $this->seedOrganization('Globex Corp', 'globex', 'globex.example.com');
+
+        Organization::forgetCurrent();
+    }
+
+    /**
+     * Seed one organization with an admin, agents, customers, SLA policies,
+     * categories, sample tickets and KB articles. The first agent and customer
+     * get predictable logins (agent@ / customer@ the given email domain).
+     */
+    private function seedOrganization(string $name, string $slug, string $emailDomain): void
+    {
         $organization = Organization::factory()->create([
-            'name' => 'Acme Inc',
-            'slug' => 'acme',
+            'name' => $name,
+            'slug' => $slug,
         ])->makeCurrent();
 
         User::factory()->admin()->for($organization)->create([
             'name' => 'Admin User',
-            'email' => 'admin@example.com',
+            'email' => "admin@{$emailDomain}",
         ]);
 
         $agents = User::factory()->agent()->for($organization)->count(3)->sequence(
-            ['name' => 'Agent User', 'email' => 'agent@example.com'],
+            ['name' => 'Agent User', 'email' => "agent@{$emailDomain}"],
             [],
             [],
         )->create();
 
         $customers = User::factory()->customer()->for($organization)->count(5)->sequence(
-            ['name' => 'Customer User', 'email' => 'customer@example.com'],
+            ['name' => 'Customer User', 'email' => "customer@{$emailDomain}"],
             [],
             [],
             [],

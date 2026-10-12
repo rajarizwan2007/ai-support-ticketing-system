@@ -5,6 +5,21 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-12 — Seed two organizations
+
+### Done
+- **`DatabaseSeeder`** now seeds two orgs, `acme` and `globex`, through one `seedOrganization()` method. Each gets 1 admin, 3 agents, 5 customers, SLA policies, categories, 20 sample tickets with messages, and 6 KB articles.
+- **Logins:** admin@/agent@/customer@example.com (acme) and admin@/agent@/customer@globex.example.com (globex), password `password`.
+
+### Decisions
+- **Same data shape for both orgs**, so tenant isolation can be checked by hand by logging into each subdomain.
+- **Email domain per org**, because `users.email` is globally unique.
+
+### Next
+- (unchanged from the previous entry)
+
+---
+
 ## 2026-10-12 — SLA timestamps; ticket actions
 
 ### Done

@@ -157,7 +157,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - Laravel uses `pgsql` for the database and Redis for cache, sessions and queue.
 - **Multi-tenancy: single database.** The tenant is resolved from the subdomain. Every tenant-owned table has an indexed `organization_id`, enforced via a global scope/trait (never manual `where` clauses). Do not propose database-per-tenant (see `docs/adr/0001-multi-tenancy.md`). Data model: `docs/erd.md`.
 - **Tests run against the `ticketing_test` database** (`docker compose exec app php artisan test`). Never point tests at `ticketing`: `tests/TestCase.php` refuses any database whose name does not end in `_test`.
-- Reset dev data with `docker compose exec app php artisan migrate:fresh --seed` (demo org `acme`; logins admin@/agent@/customer@example.com, password `password`). Log in at http://acme.localhost:8088.
+- Reset dev data with `docker compose exec app php artisan migrate:fresh --seed` (demo orgs `acme` with logins admin@/agent@/customer@example.com, and `globex` with admin@/agent@/customer@globex.example.com; password `password`). Log in at http://acme.localhost:8088 or http://globex.localhost:8088.
 - Frontend: Laravel React starter kit (Inertia, React, TypeScript, Fortify, Wayfinder). Node runs on the host: `npm run dev` or `npm run build`.
 - Code quality: `docker compose exec app composer lint` (Pint) and `docker compose exec app composer analyse` (Larastan, level 7, must stay at no errors).
 - **Dev log:** at the end of each work session, add an entry at the top of `DEVLOG.md` (Done / Decisions / Problems & fixes / Next).
