@@ -46,11 +46,16 @@ class Ticket extends Model
     use BelongsToOrganization, HasFactory, SoftDeletes;
 
     /**
-     * Stamp resolved_at and closed_at when the status changes, and clear them when the ticket is reopened.
+     * Recalculate the SLA due dates when the priority changes. Stamp resolved_at
+     * and closed_at when the status changes, and clear them when the ticket is reopened.
      */
     protected static function booted(): void
     {
         static::updating(function (Ticket $ticket): void {
+            if ($ticket->isDirty('priority')) {
+                $ticket->applySlaPolicy();
+            }
+
             if (! $ticket->isDirty('status')) {
                 return;
             }
@@ -86,6 +91,20 @@ class Ticket extends Model
             'resolved_at' => 'datetime',
             'closed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Use the organization's active SLA policy for the ticket's priority and set
+     * the due dates from when the ticket was created. No policy clears them.
+     */
+    public function applySlaPolicy(): void
+    {
+        $sla = SlaPolicy::where('priority', $this->priority)->where('is_active', true)->first();
+        $start = $this->created_at ?? now();
+
+        $this->sla_policy_id = $sla?->id;
+        $this->first_response_due_at = $sla ? $start->copy()->addMinutes($sla->first_response_minutes) : null;
+        $this->resolution_due_at = $sla ? $start->copy()->addMinutes($sla->resolution_minutes) : null;
     }
 
     /**

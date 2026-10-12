@@ -292,4 +292,24 @@ class TicketPagesTest extends TestCase
             ->get(route('tickets.create'))
             ->assertInertia(fn (Assert $page) => $page->component('tickets/create')->has('categories', 2));
     }
+
+    public function test_changing_the_priority_recalculates_the_sla_due_dates(): void
+    {
+        $this->travelTo(now()->startOfMinute());
+        $urgent = SlaPolicy::factory()->priority(Priority::Urgent)->create();
+        $ticket = Ticket::factory()->create([
+            'priority' => 'low',
+            'created_at' => now()->subHour(),
+            'first_response_due_at' => now()->addDay(),
+            'resolution_due_at' => now()->addWeek(),
+        ]);
+
+        $this->actingAs(User::factory()->agent()->create())
+            ->patch(route('tickets.update', $ticket->reference), ['priority' => 'urgent']);
+
+        $ticket->refresh();
+        $this->assertSame($urgent->id, $ticket->sla_policy_id);
+        $this->assertEquals(now()->subHour()->addMinutes($urgent->first_response_minutes), $ticket->first_response_due_at);
+        $this->assertEquals(now()->subHour()->addMinutes($urgent->resolution_minutes), $ticket->resolution_due_at);
+    }
 }

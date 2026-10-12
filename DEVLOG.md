@@ -5,6 +5,25 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-12 — Recalculate SLA due dates on priority change
+
+### Done
+- **`Ticket::applySlaPolicy()`** picks the active SLA policy for the ticket's priority and sets `sla_policy_id` and both due dates from `created_at` (now, for a new ticket). No matching policy clears them.
+- The `Ticket` `updating` hook calls it when the priority changes; `CreateTicket` calls it before saving.
+- **Tests:** 1 more in `TicketPagesTest`. Suite: 75 passing; Larastan clean.
+
+### Decisions
+- **Due dates count from when the ticket was created**, not from the priority change, so escalating an old ticket can make it overdue straight away (that is the point of an SLA).
+- **In the model hook, like the status timestamps**, so any future priority change (API, automation) gets it too.
+- **Not applied on every create:** factories and the seeder set their own due dates.
+
+### Next
+- [ ] Business-hours SLA calculation
+- [ ] Search and filters on the list
+- [ ] Notifications; reopen on customer reply
+
+---
+
 ## 2026-10-12 — Shared TypeScript types for tickets
 
 ### Done
