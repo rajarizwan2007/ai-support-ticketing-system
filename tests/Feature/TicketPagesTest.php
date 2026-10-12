@@ -196,4 +196,43 @@ class TicketPagesTest extends TestCase
             ->patch(route('tickets.update', $ticket->reference), ['assignee_id' => $otherAgent->id])
             ->assertSessionHasErrors('assignee_id');
     }
+
+    public function test_the_first_public_agent_reply_records_the_first_response(): void
+    {
+        $customer = User::factory()->customer()->create();
+        $ticket = Ticket::factory()->create(['requester_id' => $customer->id]);
+        $agent = User::factory()->agent()->create();
+
+        $this->actingAs($customer)->post(route('tickets.reply', $ticket->reference), ['body' => 'Hello?']);
+        $this->actingAs($agent)->post(route('tickets.reply', $ticket->reference), ['body' => 'Note', 'internal' => true]);
+        $this->assertNull($ticket->fresh()->first_responded_at);
+
+        $this->travelTo(now()->startOfMinute());
+        $this->actingAs($agent)->post(route('tickets.reply', $ticket->reference), ['body' => 'On it.']);
+        $this->assertEquals(now(), $ticket->fresh()->first_responded_at);
+
+        $this->travel(1)->hour();
+        $this->actingAs($agent)->post(route('tickets.reply', $ticket->reference), ['body' => 'Fixed.']);
+        $this->assertEquals(now()->subHour(), $ticket->fresh()->first_responded_at);
+    }
+
+    public function test_resolving_closing_and_reopening_set_the_sla_timestamps(): void
+    {
+        $ticket = Ticket::factory()->create(['status' => 'open']);
+        $this->actingAs(User::factory()->agent()->create());
+        $this->travelTo(now()->startOfMinute());
+
+        $this->patch(route('tickets.update', $ticket->reference), ['status' => 'resolved']);
+        $this->assertEquals(now(), $ticket->fresh()->resolved_at);
+        $this->assertNull($ticket->fresh()->closed_at);
+
+        $this->travel(1)->hour();
+        $this->patch(route('tickets.update', $ticket->reference), ['status' => 'closed']);
+        $this->assertEquals(now()->subHour(), $ticket->fresh()->resolved_at);
+        $this->assertEquals(now(), $ticket->fresh()->closed_at);
+
+        $this->patch(route('tickets.update', $ticket->reference), ['status' => 'open']);
+        $this->assertNull($ticket->fresh()->resolved_at);
+        $this->assertNull($ticket->fresh()->closed_at);
+    }
 }

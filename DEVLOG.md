@@ -5,6 +5,31 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-12 — SLA timestamps; ticket actions
+
+### Done
+- **`first_responded_at`** is set on the first public reply by an agent or admin (internal notes and customer replies don't count).
+- **`resolved_at` / `closed_at`** are set by a `Ticket` `updating` hook when the status changes: resolved stamps `resolved_at`; closed stamps `closed_at` (and `resolved_at` if missing); any other status clears both.
+- **Ticket page** shows the due dates and recorded times when set.
+- **Tests:** 2 more in `TicketPagesTest`. Suite: 70 passing; Larastan clean.
+- **Action classes** `App\Actions\Tickets\UpdateTicket` and `ReplyToTicket` (`handle()`) hold the ticket logic; `TicketController` keeps authorization, validation and the response.
+
+### Decisions
+- **Status timestamps live in a model hook**, not the controller, so later status changes (e.g. reopen on customer reply) get them for free.
+- **Actions take plain, validated data**, not the request, so jobs, commands or an API can reuse them.
+- **Reopening clears `resolved_at`/`closed_at`**, so they always describe the latest resolution.
+
+### Problems & fixes
+- Larastan read `status` as a string (from the migration), so enum comparisons were "always false". Fixed with `@property TicketStatus $status` (and `Priority $priority`) on `Ticket`. The PHPDoc must sit above the `#[Fillable]` attribute to be picked up.
+
+### Next
+- [ ] Set SLA due dates when tickets are created (no create flow yet)
+- [ ] Search and filters on the list (status, priority, assignee)
+- [ ] Email notifications; reopen a ticket when the customer replies
+- [ ] Admin: add users to the organization
+
+---
+
 ## 2026-10-09 — Ticket assignee and priority
 
 ### Done

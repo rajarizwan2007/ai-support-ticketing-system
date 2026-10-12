@@ -12,6 +12,11 @@ type Ticket = {
     priority: string;
     assignee_id: number | null;
     created_at: string;
+    first_response_due_at: string | null;
+    resolution_due_at: string | null;
+    first_responded_at: string | null;
+    resolved_at: string | null;
+    closed_at: string | null;
     requester: { name: string } | null;
     assignee: { name: string } | null;
     category: { name: string } | null;
@@ -106,6 +111,28 @@ export default function TicketsShow({
                             Created:{' '}
                             {new Date(ticket.created_at).toLocaleString()}
                         </span>
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-x-4 text-sm text-muted-foreground">
+                        {(
+                            [
+                                [
+                                    'First response due',
+                                    ticket.first_response_due_at,
+                                ],
+                                ['First response', ticket.first_responded_at],
+                                ['Resolution due', ticket.resolution_due_at],
+                                ['Resolved', ticket.resolved_at],
+                                ['Closed', ticket.closed_at],
+                            ] as const
+                        ).map(
+                            ([label, date]) =>
+                                date && (
+                                    <span key={label}>
+                                        {label}:{' '}
+                                        {new Date(date).toLocaleString()}
+                                    </span>
+                                ),
+                        )}
                     </div>
                     <p className="mt-4 whitespace-pre-line">
                         {ticket.description}

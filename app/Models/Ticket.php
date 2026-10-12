@@ -17,6 +17,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property TicketStatus $status
+ * @property Priority $priority
+ */
 #[Fillable([
     'reference',
     'requester_id',
@@ -40,6 +44,29 @@ class Ticket extends Model
 {
     /** @use HasFactory<TicketFactory> */
     use BelongsToOrganization, HasFactory, SoftDeletes;
+
+    /**
+     * Stamp resolved_at and closed_at when the status changes, and clear them when the ticket is reopened.
+     */
+    protected static function booted(): void
+    {
+        static::updating(function (Ticket $ticket): void {
+            if (! $ticket->isDirty('status')) {
+                return;
+            }
+
+            if ($ticket->status === TicketStatus::Resolved) {
+                $ticket->resolved_at = now();
+                $ticket->closed_at = null;
+            } elseif ($ticket->status === TicketStatus::Closed) {
+                $ticket->resolved_at ??= now();
+                $ticket->closed_at = now();
+            } else {
+                $ticket->resolved_at = null;
+                $ticket->closed_at = null;
+            }
+        });
+    }
 
     /**
      * Get the attributes that should be cast.

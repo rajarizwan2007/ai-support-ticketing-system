@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Tickets\ReplyToTicket;
+use App\Actions\Tickets\UpdateTicket;
 use App\Enums\MessageType;
 use App\Enums\Priority;
 use App\Enums\TicketStatus;
@@ -47,7 +49,7 @@ class TicketController extends Controller
         ]);
     }
 
-    public function reply(Request $request, Ticket $ticket): RedirectResponse
+    public function reply(Request $request, Ticket $ticket, ReplyToTicket $replyToTicket): RedirectResponse
     {
         Gate::authorize('view', $ticket);
 
@@ -58,16 +60,12 @@ class TicketController extends Controller
 
         $isInternal = $request->boolean('internal') && $request->user()->can('update', $ticket);
 
-        $ticket->messages()->create([
-            'user_id' => $request->user()->id,
-            'type' => $isInternal ? MessageType::InternalNote : MessageType::Reply,
-            'body' => $validated['body'],
-        ]);
+        $replyToTicket->handle($ticket, $request->user(), $validated['body'], $isInternal);
 
         return back();
     }
 
-    public function update(Request $request, Ticket $ticket): RedirectResponse
+    public function update(Request $request, Ticket $ticket, UpdateTicket $updateTicket): RedirectResponse
     {
         Gate::authorize('update', $ticket);
 
@@ -77,28 +75,7 @@ class TicketController extends Controller
             'assignee_id' => ['sometimes', 'nullable', Rule::in(User::staff()->pluck('id'))],
         ]);
 
-        $ticket->update($validated);
-
-        $changes = [];
-
-        if ($ticket->wasChanged('status')) {
-            $changes[] = 'Status changed to '.str_replace('_', ' ', $validated['status']);
-        }
-
-        if ($ticket->wasChanged('priority')) {
-            $changes[] = 'Priority changed to '.$validated['priority'];
-        }
-
-        if ($ticket->wasChanged('assignee_id')) {
-            $changes[] = $ticket->assignee ? 'Assigned to '.$ticket->assignee->name : 'Unassigned';
-        }
-
-        foreach ($changes as $change) {
-            $ticket->messages()->create([
-                'type' => MessageType::System,
-                'body' => $change.' by '.$request->user()->name.'.',
-            ]);
-        }
+        $updateTicket->handle($ticket, $request->user(), $validated);
 
         return back();
     }
