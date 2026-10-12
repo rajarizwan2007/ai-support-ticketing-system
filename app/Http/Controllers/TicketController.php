@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Tickets\CreateTicket;
 use App\Actions\Tickets\ReplyToTicket;
 use App\Actions\Tickets\UpdateTicket;
 use App\Enums\MessageType;
 use App\Enums\Priority;
 use App\Enums\TicketStatus;
+use App\Models\Category;
 use App\Models\Role;
 use App\Models\Ticket;
 use App\Models\User;
@@ -27,6 +29,28 @@ class TicketController extends Controller
                 ->latest()
                 ->paginate(20),
         ]);
+    }
+
+    public function create(): Response
+    {
+        return Inertia::render('tickets/create', [
+            'categories' => Category::orderBy('name')->get(['id', 'name']),
+            'priorities' => array_column(Priority::cases(), 'value'),
+        ]);
+    }
+
+    public function store(Request $request, CreateTicket $createTicket): RedirectResponse
+    {
+        $validated = $request->validate([
+            'subject' => ['required', 'string', 'max:255'],
+            'description' => ['required', 'string', 'max:10000'],
+            'category_id' => ['nullable', Rule::in(Category::pluck('id'))],
+            'priority' => ['sometimes', Rule::enum(Priority::class)],
+        ]);
+
+        $ticket = $createTicket->handle($request->user(), $validated);
+
+        return to_route('tickets.show', $ticket->reference);
     }
 
     public function show(Request $request, Ticket $ticket): Response

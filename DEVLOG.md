@@ -5,6 +5,30 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-12 — Ticket create flow with SLA due dates
+
+### Done
+- **New ticket page** (`tickets/create`, "New ticket" button on the list): subject, description, category, priority (default medium). The current user is the requester.
+- **`CreateTicket` action** assigns the next reference (`TKT-1001`, `TKT-1002`, ...) per organization and picks the active SLA policy for the priority. It sets `first_response_due_at` / `resolution_due_at` from now; with no matching policy they stay empty.
+- **Validation:** the category must belong to the current organization (`Rule::in` over the tenant-scoped categories).
+- **Tests:** 4 more in `TicketPagesTest`. Suite: 74 passing; Larastan clean.
+
+### Decisions
+- **Reference = 1001 + count of the org's tickets (soft-deleted included).** Simple; the `(organization_id, reference)` unique index rejects the rare clash from two tickets created at the same moment.
+- **Customers may pick a priority**; staff can still change it.
+- **`business_hours_only` is ignored for now**: due dates count calendar minutes.
+
+### Problems & fixes
+- The Inertia test for the new page failed with "Unable to locate file in Vite manifest". Fixed with `npm run build` (this also regenerates the Wayfinder routes).
+
+### Next
+- [ ] Recalculate SLA due dates when the priority changes
+- [ ] Business-hours SLA calculation
+- [ ] Search and filters on the list
+- [ ] Notifications; reopen on customer reply
+
+---
+
 ## 2026-10-12 — Week review
 
 ### Done

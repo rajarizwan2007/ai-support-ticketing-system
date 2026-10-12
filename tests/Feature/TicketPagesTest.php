@@ -5,8 +5,10 @@ namespace Tests\Feature;
 use App\Enums\MessageType;
 use App\Enums\Priority;
 use App\Enums\TicketStatus;
+use App\Models\Category;
 use App\Models\Message;
 use App\Models\Organization;
+use App\Models\SlaPolicy;
 use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -234,5 +236,60 @@ class TicketPagesTest extends TestCase
         $this->patch(route('tickets.update', $ticket->reference), ['status' => 'open']);
         $this->assertNull($ticket->fresh()->resolved_at);
         $this->assertNull($ticket->fresh()->closed_at);
+    }
+
+    public function test_customers_can_open_a_ticket_with_sla_due_dates(): void
+    {
+        $customer = User::factory()->customer()->create();
+        $sla = SlaPolicy::factory()->priority(Priority::High)->create();
+        SlaPolicy::factory()->priority(Priority::High)->create(['is_active' => false, 'first_response_minutes' => 1]);
+        $category = Category::factory()->create();
+        Ticket::factory()->create(['reference' => 'TKT-1001']);
+        $this->travelTo(now()->startOfMinute());
+
+        $this->actingAs($customer)
+            ->post(route('tickets.store'), [
+                'subject' => 'Cannot log in',
+                'description' => 'Password reset email never arrives.',
+                'category_id' => $category->id,
+                'priority' => 'high',
+            ])
+            ->assertRedirect(route('tickets.show', 'TKT-1002'));
+
+        $ticket = Ticket::where('reference', 'TKT-1002')->sole();
+        $this->assertSame($customer->id, $ticket->requester_id);
+        $this->assertSame(TicketStatus::Open, $ticket->status);
+        $this->assertSame($sla->id, $ticket->sla_policy_id);
+        $this->assertEquals(now()->addMinutes($sla->first_response_minutes), $ticket->first_response_due_at);
+        $this->assertEquals(now()->addMinutes($sla->resolution_minutes), $ticket->resolution_due_at);
+    }
+
+    public function test_a_ticket_without_a_matching_sla_policy_has_no_due_dates(): void
+    {
+        $this->actingAs(User::factory()->customer()->create())
+            ->post(route('tickets.store'), ['subject' => 'Question', 'description' => 'How do I export?']);
+
+        $ticket = Ticket::sole();
+        $this->assertSame(Priority::Medium, $ticket->priority);
+        $this->assertNull($ticket->sla_policy_id);
+        $this->assertNull($ticket->first_response_due_at);
+    }
+
+    public function test_a_ticket_cannot_use_another_organizations_category(): void
+    {
+        $otherCategory = Category::factory()->for(Organization::factory())->create();
+
+        $this->actingAs(User::factory()->customer()->create())
+            ->post(route('tickets.store'), ['subject' => 'Hi', 'description' => 'Hi', 'category_id' => $otherCategory->id])
+            ->assertSessionHasErrors('category_id');
+    }
+
+    public function test_the_create_page_lists_the_organizations_categories(): void
+    {
+        Category::factory()->count(2)->create();
+
+        $this->actingAs(User::factory()->customer()->create())
+            ->get(route('tickets.create'))
+            ->assertInertia(fn (Assert $page) => $page->component('tickets/create')->has('categories', 2));
     }
 }

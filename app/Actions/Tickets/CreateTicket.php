@@ -1,0 +1,33 @@
+<?php
+
+namespace App\Actions\Tickets;
+
+use App\Enums\Priority;
+use App\Models\SlaPolicy;
+use App\Models\Ticket;
+use App\Models\User;
+
+class CreateTicket
+{
+    /**
+     * Open a ticket for the requester, with the next reference and SLA due
+     * dates from the organization's active policy for its priority.
+     *
+     * @param  array{subject: string, description: string, category_id?: int|string|null, priority?: string}  $attributes
+     */
+    public function handle(User $requester, array $attributes): Ticket
+    {
+        $priority = Priority::from($attributes['priority'] ?? Priority::Medium->value);
+        $sla = SlaPolicy::where('priority', $priority)->where('is_active', true)->first();
+
+        return Ticket::create([
+            ...$attributes,
+            'reference' => 'TKT-'.(1001 + Ticket::withTrashed()->count()),
+            'requester_id' => $requester->id,
+            'priority' => $priority,
+            'sla_policy_id' => $sla?->id,
+            'first_response_due_at' => $sla ? now()->addMinutes($sla->first_response_minutes) : null,
+            'resolution_due_at' => $sla ? now()->addMinutes($sla->resolution_minutes) : null,
+        ]);
+    }
+}

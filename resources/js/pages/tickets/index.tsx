@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { Badge } from '@/components/ui/badge';
-import { index, show } from '@/routes/tickets';
+import { Button } from '@/components/ui/button';
+import { create, index, show } from '@/routes/tickets';
 
 type Ticket = {
     id: number;
@@ -28,6 +29,9 @@ export default function TicketsIndex({ tickets }: Props) {
         <>
             <Head title="Tickets" />
             <div className="p-4">
+                <Button asChild className="mb-4">
+                    <Link href={create()}>New ticket</Link>
+                </Button>
                 <table className="w-full text-left text-sm">
                     <thead className="border-b text-muted-foreground">
                         <tr>
