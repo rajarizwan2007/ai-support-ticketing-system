@@ -5,6 +5,21 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-12 — Week review
+
+### Done
+- **Week 1 (2026-10-07 → 10-12):** Docker stack, ERD and migrations, single-DB multi-tenancy (ADR-001), login, roles and ticket policy, ticket list/detail, replies, status/priority/assignee changes, SLA timestamps, action classes, Pint + Larastan, two-org seed data.
+- **Checks green:** 70 tests (196 assertions), Larastan level 7 no errors, Pint clean.
+- **README** stub: stack, setup, demo logins, dev commands, links to docs.
+
+### Next
+- [ ] Ticket create flow (with SLA due dates)
+- [ ] Search and filters on the list
+- [ ] Notifications; reopen on customer reply
+- [ ] Queue worker service, then the first AI feature (embeddings + similar tickets)
+
+---
+
 ## 2026-10-12 — Seed two organizations
 
 ### Done
