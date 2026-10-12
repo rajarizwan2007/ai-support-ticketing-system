@@ -5,6 +5,20 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-12 — Shared TypeScript types for tickets
+
+### Done
+- **`resources/js/types/tickets.ts`**: `Ticket`, `Message`, `Category`, `UserSummary` (`Pick<User, 'id' | 'name'>`), plus `TicketStatus`, `Priority` and `MessageType` as string unions matching the PHP enums. Exported from `@/types`.
+- The tickets pages (`index`, `show`, `create`) use them instead of their own inline types.
+- `tsc` and `npm run build` pass; ticket tests still green.
+
+### Decisions
+- **One `Ticket` type with optional relations** (`requester?`, `assignee?`, `category?`): pages load different relations, and the optional fields keep a single type honest about that.
+- **`User` stays in `types/auth.ts`** (from the starter kit); relation fields use the smaller `UserSummary`, because controllers load only `id,name`.
+- **Enum unions are written by hand.** They must be updated when a PHP enum changes; generating them is an option if they drift.
+
+---
+
 ## 2026-10-12 — Ticket create flow with SLA due dates
 
 ### Done

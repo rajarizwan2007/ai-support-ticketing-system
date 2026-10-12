@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { create, index, store } from '@/routes/tickets';
+import type { Category, Priority } from '@/types';
 
 type Props = {
-    categories: { id: number; name: string }[];
-    priorities: string[];
+    categories: Category[];
+    priorities: Priority[];
 };
 
 const fieldClassName = 'rounded-md border bg-background p-2 text-sm';

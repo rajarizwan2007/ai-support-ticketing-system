@@ -2,17 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { create, index, show } from '@/routes/tickets';
-
-type Ticket = {
-    id: number;
-    reference: string;
-    subject: string;
-    status: string;
-    priority: string;
-    created_at: string;
-    requester: { name: string } | null;
-    assignee: { name: string } | null;
-};
+import type { Ticket } from '@/types';
 
 type Props = {
     tickets: {

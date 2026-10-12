@@ -3,40 +3,21 @@ import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { index, reply, update } from '@/routes/tickets';
-
-type Ticket = {
-    reference: string;
-    subject: string;
-    description: string;
-    status: string;
-    priority: string;
-    assignee_id: number | null;
-    created_at: string;
-    first_response_due_at: string | null;
-    resolution_due_at: string | null;
-    first_responded_at: string | null;
-    resolved_at: string | null;
-    closed_at: string | null;
-    requester: { name: string } | null;
-    assignee: { name: string } | null;
-    category: { name: string } | null;
-};
-
-type Message = {
-    id: number;
-    type: 'reply' | 'internal_note' | 'system';
-    body: string;
-    created_at: string;
-    author: { name: string } | null;
-};
+import type {
+    Message,
+    Priority,
+    Ticket,
+    TicketStatus,
+    UserSummary,
+} from '@/types';
 
 type Props = {
     ticket: Ticket;
     messages: Message[];
     canUpdate: boolean;
-    statuses: string[];
-    priorities: string[];
-    staff: { id: number; name: string }[];
+    statuses: TicketStatus[];
+    priorities: Priority[];
+    staff: UserSummary[];
 };
 
 export default function TicketsShow({
