@@ -5,6 +5,26 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-09 — Ticket assignee and priority
+
+### Done
+- **Priority and assignee dropdowns** next to status on the ticket page (admins and agents), saved on change. Each real change is logged ("Priority changed to urgent by Admin User.", "Assigned to Agent User by Admin User.", "Unassigned by …").
+- **`TicketController::update()`** accepts any of `status`, `priority`, `assignee_id` (`sometimes`), so each dropdown sends only its own field.
+- **`User::staff()` scope** (admins and agents), used for the assignee dropdown and to validate `assignee_id`.
+- **Tests:** 4 more in `TicketPagesTest` (priority, assign and unassign, no customers, no other organization's agents). Suite: 68 passing; Larastan clean.
+
+### Decisions
+- **`assignee_id` is validated with `Rule::in(User::staff()->pluck('id'))`:** the staff query is tenant-scoped, so this one rule rejects customers *and* other organizations' users.
+- **One `FieldSelect` helper** in the page instead of three copies of the dropdown.
+
+### Next
+- [ ] SLA timestamps (first response, resolved, closed)
+- [ ] Search and filters on the list (status, priority, assignee)
+- [ ] Email notifications; reopen a ticket when the customer replies
+- [ ] Admin: add users to the organization
+
+---
+
 ## 2026-10-08 — Pint and Larastan
 
 ### Done

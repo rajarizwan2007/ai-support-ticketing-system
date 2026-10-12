@@ -10,6 +10,7 @@ type Ticket = {
     description: string;
     status: string;
     priority: string;
+    assignee_id: number | null;
     created_at: string;
     requester: { name: string } | null;
     assignee: { name: string } | null;
@@ -29,6 +30,8 @@ type Props = {
     messages: Message[];
     canUpdate: boolean;
     statuses: string[];
+    priorities: string[];
+    staff: { id: number; name: string }[];
 };
 
 export default function TicketsShow({
@@ -36,6 +39,8 @@ export default function TicketsShow({
     messages,
     canUpdate,
     statuses,
+    priorities,
+    staff,
 }: Props) {
     return (
         <>
@@ -48,32 +53,54 @@ export default function TicketsShow({
                     <h1 className="text-xl font-semibold">{ticket.subject}</h1>
                     <div className="mt-2 flex flex-wrap gap-2 text-sm">
                         {canUpdate ? (
-                            <select
-                                aria-label="Status"
-                                value={ticket.status}
-                                onChange={(event) =>
-                                    router.patch(
-                                        update.url(ticket.reference),
-                                        { status: event.target.value },
-                                        { preserveScroll: true },
-                                    )
-                                }
-                                className="rounded-md border bg-background px-2 py-0.5 text-xs"
-                            >
-                                {statuses.map((status) => (
-                                    <option key={status} value={status}>
-                                        {status.replace('_', ' ')}
-                                    </option>
-                                ))}
-                            </select>
+                            <>
+                                <FieldSelect
+                                    ticket={ticket}
+                                    field="status"
+                                    value={ticket.status}
+                                    options={statuses.map((status) => [
+                                        status,
+                                        status.replace('_', ' '),
+                                    ])}
+                                />
+                                <FieldSelect
+                                    ticket={ticket}
+                                    field="priority"
+                                    value={ticket.priority}
+                                    options={priorities.map((priority) => [
+                                        priority,
+                                        priority,
+                                    ])}
+                                />
+                                <FieldSelect
+                                    ticket={ticket}
+                                    field="assignee_id"
+                                    value={String(ticket.assignee_id ?? '')}
+                                    options={[
+                                        ['', 'Unassigned'],
+                                        ...staff.map(
+                                            (user): [string, string] => [
+                                                String(user.id),
+                                                user.name,
+                                            ],
+                                        ),
+                                    ]}
+                                />
+                            </>
                         ) : (
-                            <Badge variant="secondary">
-                                {ticket.status.replace('_', ' ')}
-                            </Badge>
+                            <>
+                                <Badge variant="secondary">
+                                    {ticket.status.replace('_', ' ')}
+                                </Badge>
+                                <Badge variant="outline">
+                                    {ticket.priority}
+                                </Badge>
+                                <span>
+                                    Assignee: {ticket.assignee?.name ?? '—'}
+                                </span>
+                            </>
                         )}
-                        <Badge variant="outline">{ticket.priority}</Badge>
                         <span>Requester: {ticket.requester?.name}</span>
-                        <span>Assignee: {ticket.assignee?.name ?? '—'}</span>
                         <span>Category: {ticket.category?.name ?? '—'}</span>
                         <span>
                             Created:{' '}
@@ -143,6 +170,42 @@ export default function TicketsShow({
                 </Form>
             </div>
         </>
+    );
+}
+
+/**
+ * A dropdown that saves one ticket field as soon as it changes.
+ */
+function FieldSelect({
+    ticket,
+    field,
+    value,
+    options,
+}: {
+    ticket: Ticket;
+    field: 'status' | 'priority' | 'assignee_id';
+    value: string;
+    options: [string, string][];
+}) {
+    return (
+        <select
+            aria-label={field.replace('_id', '')}
+            value={value}
+            onChange={(event) =>
+                router.patch(
+                    update.url(ticket.reference),
+                    { [field]: event.target.value || null },
+                    { preserveScroll: true },
+                )
+            }
+            className="rounded-md border bg-background px-2 py-0.5 text-xs"
+        >
+            {options.map(([optionValue, label]) => (
+                <option key={optionValue} value={optionValue}>
+                    {label}
+                </option>
+            ))}
+        </select>
     );
 }
 

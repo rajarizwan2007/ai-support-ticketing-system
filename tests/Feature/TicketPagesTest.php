@@ -3,8 +3,10 @@
 namespace Tests\Feature;
 
 use App\Enums\MessageType;
+use App\Enums\Priority;
 use App\Enums\TicketStatus;
 use App\Models\Message;
+use App\Models\Organization;
 use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -144,5 +146,54 @@ class TicketPagesTest extends TestCase
             ->patch(route('tickets.update', $ticket->reference), ['status' => 'open']);
 
         $this->assertSame(0, $ticket->messages()->count());
+    }
+
+    public function test_agents_can_change_the_priority_and_it_is_logged(): void
+    {
+        $ticket = Ticket::factory()->create(['priority' => 'low']);
+
+        $this->actingAs(User::factory()->agent()->create())
+            ->patch(route('tickets.update', $ticket->reference), ['priority' => 'urgent'])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(Priority::Urgent, $ticket->fresh()->priority);
+        $this->assertStringStartsWith('Priority changed to urgent', $ticket->messages()->sole()->body);
+    }
+
+    public function test_agents_can_assign_and_unassign_a_ticket(): void
+    {
+        $ticket = Ticket::factory()->create();
+        $agent = User::factory()->agent()->create(['name' => 'Sam Agent']);
+        $this->actingAs($agent);
+
+        $this->patch(route('tickets.update', $ticket->reference), ['assignee_id' => $agent->id]);
+        $this->assertSame($agent->id, $ticket->fresh()->assignee_id);
+
+        $this->patch(route('tickets.update', $ticket->reference), ['assignee_id' => null]);
+        $this->assertNull($ticket->fresh()->assignee_id);
+
+        $this->assertSame(
+            ['Assigned to Sam Agent by Sam Agent.', 'Unassigned by Sam Agent.'],
+            $ticket->messages()->oldest('id')->pluck('body')->all(),
+        );
+    }
+
+    public function test_tickets_cannot_be_assigned_to_customers(): void
+    {
+        $ticket = Ticket::factory()->create();
+
+        $this->actingAs(User::factory()->agent()->create())
+            ->patch(route('tickets.update', $ticket->reference), ['assignee_id' => $ticket->requester_id])
+            ->assertSessionHasErrors('assignee_id');
+    }
+
+    public function test_tickets_cannot_be_assigned_to_another_organizations_agent(): void
+    {
+        $ticket = Ticket::factory()->create();
+        $otherAgent = User::factory()->agent()->for(Organization::factory())->create();
+
+        $this->actingAs(User::factory()->agent()->create())
+            ->patch(route('tickets.update', $ticket->reference), ['assignee_id' => $otherAgent->id])
+            ->assertSessionHasErrors('assignee_id');
     }
 }

@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Enums\MessageType;
+use App\Enums\Priority;
 use App\Enums\TicketStatus;
 use App\Models\Role;
 use App\Models\Ticket;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -38,8 +40,10 @@ class TicketController extends Controller
         return Inertia::render('tickets/show', [
             'ticket' => $ticket->load('requester:id,name', 'assignee:id,name', 'category:id,name'),
             'messages' => $messages,
-            'canUpdate' => $request->user()->can('update', $ticket),
+            'canUpdate' => $canUpdate = $request->user()->can('update', $ticket),
             'statuses' => array_column(TicketStatus::cases(), 'value'),
+            'priorities' => array_column(Priority::cases(), 'value'),
+            'staff' => $canUpdate ? User::staff()->orderBy('name')->get(['id', 'name']) : [],
         ]);
     }
 
@@ -68,15 +72,31 @@ class TicketController extends Controller
         Gate::authorize('update', $ticket);
 
         $validated = $request->validate([
-            'status' => ['required', Rule::enum(TicketStatus::class)],
+            'status' => ['sometimes', Rule::enum(TicketStatus::class)],
+            'priority' => ['sometimes', Rule::enum(Priority::class)],
+            'assignee_id' => ['sometimes', 'nullable', Rule::in(User::staff()->pluck('id'))],
         ]);
 
         $ticket->update($validated);
 
+        $changes = [];
+
         if ($ticket->wasChanged('status')) {
+            $changes[] = 'Status changed to '.str_replace('_', ' ', $validated['status']);
+        }
+
+        if ($ticket->wasChanged('priority')) {
+            $changes[] = 'Priority changed to '.$validated['priority'];
+        }
+
+        if ($ticket->wasChanged('assignee_id')) {
+            $changes[] = $ticket->assignee ? 'Assigned to '.$ticket->assignee->name : 'Unassigned';
+        }
+
+        foreach ($changes as $change) {
             $ticket->messages()->create([
                 'type' => MessageType::System,
-                'body' => 'Status changed to '.str_replace('_', ' ', $validated['status']).' by '.$request->user()->name.'.',
+                'body' => $change.' by '.$request->user()->name.'.',
             ]);
         }
 

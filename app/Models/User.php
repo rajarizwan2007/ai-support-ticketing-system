@@ -7,6 +7,8 @@ use App\Models\Concerns\BelongsToOrganization;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -83,6 +85,17 @@ class User extends Authenticatable
     public function kbArticles(): HasMany
     {
         return $this->hasMany(KbArticle::class, 'author_id');
+    }
+
+    /**
+     * Admins and agents: the people who work on tickets.
+     *
+     * @param  Builder<User>  $query
+     */
+    #[Scope]
+    protected function staff(Builder $query): void
+    {
+        $query->whereHas('role', fn (Builder $role) => $role->whereIn('slug', [Role::ADMIN, Role::AGENT]));
     }
 
     public function hasRole(string $slug): bool
