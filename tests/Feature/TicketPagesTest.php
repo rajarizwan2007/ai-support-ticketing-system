@@ -379,4 +379,35 @@ class TicketPagesTest extends TestCase
         $this->assertSame(TicketStatus::OnHold, $onHold->fresh()->status);
         $this->assertSame(TicketStatus::Resolved, $resolved->fresh()->status);
     }
+
+    public function test_ticket_actions_show_a_success_toast(): void
+    {
+        $customer = User::factory()->customer()->create();
+        $ticket = Ticket::factory()->create(['requester_id' => $customer->id]);
+        $agent = User::factory()->agent()->create();
+
+        $this->actingAs($customer)
+            ->post(route('tickets.store'), ['subject' => 'Help', 'description' => 'Please'])
+            ->assertInertiaFlash('toast', ['type' => 'success', 'message' => 'Ticket '.Ticket::latest('id')->first()?->reference.' created.']);
+
+        $this->actingAs($customer)
+            ->post(route('tickets.reply', $ticket->reference), ['body' => 'Any news?'])
+            ->assertInertiaFlash('toast.message', 'Reply sent.');
+
+        $this->actingAs($agent)
+            ->post(route('tickets.reply', $ticket->reference), ['body' => 'Checking', 'internal' => true])
+            ->assertInertiaFlash('toast.message', 'Internal note added.');
+
+        $this->actingAs($agent)
+            ->patch(route('tickets.update', $ticket->reference), ['priority' => 'high'])
+            ->assertInertiaFlash('toast.message', 'Ticket updated.');
+    }
+
+    public function test_failed_validation_shows_no_success_toast(): void
+    {
+        $this->actingAs(User::factory()->customer()->create())
+            ->post(route('tickets.store'), ['subject' => ''])
+            ->assertSessionHasErrors('subject')
+            ->assertInertiaFlashMissing('toast');
+    }
 }

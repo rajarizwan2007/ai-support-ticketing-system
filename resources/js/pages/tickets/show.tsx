@@ -1,9 +1,11 @@
 import { Form, Head, Link, router } from '@inertiajs/react';
+import { useState } from 'react';
 import AttachmentInput from '@/components/attachment-input';
 import AttachmentList from '@/components/attachment-list';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import { index, reply, show, update } from '@/routes/tickets';
 import type {
     Attachment,
@@ -154,6 +156,11 @@ export default function TicketsShow({
 
                 <div className="flex flex-col gap-3">
                     <h2 className="font-semibold">Messages</h2>
+                    {messages.length === 0 && (
+                        <p className="text-sm text-muted-foreground">
+                            No messages yet.
+                        </p>
+                    )}
                     {messages.map((message) => (
                         <div
                             key={message.id}
@@ -197,6 +204,7 @@ export default function TicketsShow({
                             <AttachmentInput errors={errors} />
                             <div className="flex items-center gap-4">
                                 <Button type="submit" disabled={processing}>
+                                    {processing && <Spinner />}
                                     Send
                                 </Button>
                                 {canUpdate && (
@@ -232,18 +240,25 @@ function FieldSelect({
     value: string;
     options: [string, string][];
 }) {
+    const [saving, setSaving] = useState(false);
+
     return (
         <select
             aria-label={field.replace('_id', '')}
             value={value}
+            disabled={saving}
             onChange={(event) =>
                 router.patch(
                     update.url(ticket.reference),
                     { [field]: event.target.value || null },
-                    { preserveScroll: true },
+                    {
+                        preserveScroll: true,
+                        onStart: () => setSaving(true),
+                        onFinish: () => setSaving(false),
+                    },
                 )
             }
-            className="rounded-md border bg-background px-2 py-0.5 text-xs"
+            className="rounded-md border bg-background px-2 py-0.5 text-xs disabled:opacity-50"
         >
             {options.map(([optionValue, label]) => (
                 <option key={optionValue} value={optionValue}>

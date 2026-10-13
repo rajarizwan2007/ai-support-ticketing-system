@@ -74,6 +74,24 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-13 — Flash messages; empty and loading states (WBS 1.2.4.2)
+
+### Done
+- **Toasts** after ticket actions, using the starter kit's existing `Inertia::flash('toast', ...)` + Sonner setup: "Ticket TKT-1021 created.", "Reply sent.", "Internal note added.", "Ticket updated.".
+- **Empty states:** the ticket list says "No tickets match these filters." (or "No tickets yet." with no filters); a ticket with no messages says "No messages yet.".
+- **Loading states:** Filter, Create ticket and Send buttons show a spinner and are disabled while submitting; the status / priority / assignee dropdowns are disabled while their change saves.
+- **Tests:** 2 more in `TicketPagesTest` (`assertInertiaFlash`, and no toast when validation fails). Suite: 103 passing; Larastan clean.
+
+### Decisions
+- **Reuse the starter kit's toast plumbing** (`useFlashToast` hook, `FlashToast` type) instead of adding a new flash prop.
+- **Spinner inside the button**, as on the login page, so every form looks the same while busy.
+
+### Next
+- [ ] Week 2 review (WBS 1.2.5.3)
+- [ ] Week 3: events + queued listeners, SLA breach command, in-app notifications + bell, Horizon
+
+---
+
 ## 2026-10-13 — Similar tickets with local embeddings (ADR-002)
 
 ### Done

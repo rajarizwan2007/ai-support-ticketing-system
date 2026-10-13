@@ -2,6 +2,7 @@ import { Form, Head, Link } from '@inertiajs/react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
 import { create, index, show } from '@/routes/tickets';
 import type { Priority, Ticket, TicketStatus, UserSummary } from '@/types';
 
@@ -46,61 +47,70 @@ export default function TicketsIndex({
                     options={{ preserveState: true }}
                     className="mb-4 flex flex-wrap gap-2"
                 >
-                    <Input
-                        name="search"
-                        defaultValue={filters.search}
-                        placeholder="Search reference or subject"
-                        aria-label="Search"
-                        className="w-64"
-                    />
-                    <select
-                        name="status"
-                        defaultValue={filters.status ?? ''}
-                        aria-label="Status"
-                        className={selectClassName}
-                    >
-                        <option value="">Any status</option>
-                        {statuses.map((status) => (
-                            <option key={status} value={status}>
-                                {status.replace('_', ' ')}
-                            </option>
-                        ))}
-                    </select>
-                    <select
-                        name="priority"
-                        defaultValue={filters.priority ?? ''}
-                        aria-label="Priority"
-                        className={selectClassName}
-                    >
-                        <option value="">Any priority</option>
-                        {priorities.map((priority) => (
-                            <option key={priority} value={priority}>
-                                {priority}
-                            </option>
-                        ))}
-                    </select>
-                    {staff.length > 0 && (
-                        <select
-                            name="assignee"
-                            defaultValue={filters.assignee ?? ''}
-                            aria-label="Assignee"
-                            className={selectClassName}
-                        >
-                            <option value="">Any assignee</option>
-                            <option value="unassigned">Unassigned</option>
-                            {staff.map((user) => (
-                                <option key={user.id} value={user.id}>
-                                    {user.name}
-                                </option>
-                            ))}
-                        </select>
+                    {({ processing }) => (
+                        <>
+                            <Input
+                                name="search"
+                                defaultValue={filters.search}
+                                placeholder="Search reference or subject"
+                                aria-label="Search"
+                                className="w-64"
+                            />
+                            <select
+                                name="status"
+                                defaultValue={filters.status ?? ''}
+                                aria-label="Status"
+                                className={selectClassName}
+                            >
+                                <option value="">Any status</option>
+                                {statuses.map((status) => (
+                                    <option key={status} value={status}>
+                                        {status.replace('_', ' ')}
+                                    </option>
+                                ))}
+                            </select>
+                            <select
+                                name="priority"
+                                defaultValue={filters.priority ?? ''}
+                                aria-label="Priority"
+                                className={selectClassName}
+                            >
+                                <option value="">Any priority</option>
+                                {priorities.map((priority) => (
+                                    <option key={priority} value={priority}>
+                                        {priority}
+                                    </option>
+                                ))}
+                            </select>
+                            {staff.length > 0 && (
+                                <select
+                                    name="assignee"
+                                    defaultValue={filters.assignee ?? ''}
+                                    aria-label="Assignee"
+                                    className={selectClassName}
+                                >
+                                    <option value="">Any assignee</option>
+                                    <option value="unassigned">Unassigned</option>
+                                    {staff.map((user) => (
+                                        <option key={user.id} value={user.id}>
+                                            {user.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
+                            <Button
+                                type="submit"
+                                variant="secondary"
+                                disabled={processing}
+                            >
+                                {processing && <Spinner />}
+                                Filter
+                            </Button>
+                            <Button asChild variant="ghost">
+                                <Link href={index()}>Clear</Link>
+                            </Button>
+                        </>
                     )}
-                    <Button type="submit" variant="secondary">
-                        Filter
-                    </Button>
-                    <Button asChild variant="ghost">
-                        <Link href={index()}>Clear</Link>
-                    </Button>
                 </Form>
 
                 <table className="w-full text-left text-sm">
@@ -154,6 +164,18 @@ export default function TicketsIndex({
                                 </td>
                             </tr>
                         ))}
+                        {tickets.data.length === 0 && (
+                            <tr>
+                                <td
+                                    colSpan={7}
+                                    className="p-8 text-center text-muted-foreground"
+                                >
+                                    {Object.values(filters).some(Boolean)
+                                        ? 'No tickets match these filters.'
+                                        : 'No tickets yet.'}
+                                </td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
 

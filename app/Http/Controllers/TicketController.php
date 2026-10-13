@@ -72,6 +72,8 @@ class TicketController extends Controller
 
         $ticket = $createTicket->handle($request->user(), $validated, $request->file('attachments', []));
 
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Ticket :reference created.', ['reference' => $ticket->reference])]);
+
         return to_route('tickets.show', $ticket->reference);
     }
 
@@ -116,6 +118,8 @@ class TicketController extends Controller
 
         $replyToTicket->handle($ticket, $request->user(), $validated['body'], $isInternal, $request->file('attachments', []));
 
+        Inertia::flash('toast', ['type' => 'success', 'message' => $isInternal ? __('Internal note added.') : __('Reply sent.')]);
+
         return back();
     }
 
@@ -143,6 +147,8 @@ class TicketController extends Controller
         ]);
 
         $updateTicket->handle($ticket, $request->user(), $validated);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Ticket updated.')]);
 
         return back();
     }
