@@ -24,6 +24,20 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-13 — Project summary
+
+### Done
+- **`docs/SUMMARY.md`:** one-page overview (stack, features, data model, planned AI features, key decisions, concepts, quality, next). Linked from the README.
+
+### Decisions
+- **AI features stay planned, not built:** similar tickets → KB suggestions → suggested replies, then summary and sentiment. Laravel calls the provider from queued jobs; pgvector does the search; no Python service.
+- **Human in the loop:** AI drafts replies, agents send them.
+
+### Next
+- [ ] ADR for the AI provider and embedding model (sets the vector size)
+
+---
+
 ## 2026-10-12 — Shared TypeScript types for tickets
 
 ### Done

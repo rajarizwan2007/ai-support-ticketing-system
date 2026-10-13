@@ -34,6 +34,7 @@ docker compose exec app composer analyse   # Larastan, level 7
 
 ## Docs
 
+- [Project summary](docs/SUMMARY.md)
 - [ERD](docs/erd.md)
 - [ADR-001: multi-tenancy](docs/adr/0001-multi-tenancy.md)
 - [Dev log](DEVLOG.md)
