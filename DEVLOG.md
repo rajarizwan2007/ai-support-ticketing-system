@@ -5,6 +5,28 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-13 — WBS review and summary fix
+
+### Done
+- **Reviewed the code against the WBS** (`docs/Project - WBS.xlsx`, now in git). Status column updated: 25 of 98 tasks done (25%); week 2 at 47%, week 3 at 25%.
+- **WBS:** two new columns per task, "Watch (YouTube search)" and "Read (docs / article)", for interview prep. Status cells are coloured (Done green, In progress yellow) with conditional formatting.
+- **`docs/SUMMARY.md`:** AI section rewritten to match the WBS (Python FastAPI + Ollama, embeddings, RAG replies, auto-triage, provider layer with Claude off); "Next" follows the WBS.
+
+### Decisions
+- **Links are YouTube searches and official docs, not specific videos:** they can't go dead or point to the wrong video.
+- **"Learn …" tasks are left for me to mark**; only code tasks were updated.
+
+### Problems & fixes
+- The earlier summary said "no Python" and "no triage", which contradicted the WBS. → Fixed; the WBS is the plan of record.
+- Drift from the WBS: tests use PHPUnit (WBS says Pest); notifications are sent from actions instead of events and listeners.
+
+### Next
+- [ ] CI (GitHub Actions)
+- [ ] Rest of week 2: attachments, flash messages, empty and loading states
+- [ ] Rest of week 3: events, SLA breach command, database notifications and bell, API, Horizon
+
+---
+
 ## 2026-10-13 — Queue worker and email notifications
 
 ### Done

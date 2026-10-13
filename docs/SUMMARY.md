@@ -1,6 +1,6 @@
 # Project Summary
 
-A multi-tenant support ticketing app: organizations get their own subdomain, customers raise tickets, agents and admins work them against SLA deadlines. AI features (embeddings, similar tickets, reply suggestions) come next.
+A multi-tenant support ticketing app: organizations get their own subdomain, customers raise tickets, agents and admins work them against SLA deadlines. AI features (auto-triage, RAG suggested replies) come later, through a Python service with a local model.
 
 ## Stack
 
@@ -10,6 +10,7 @@ A multi-tenant support ticketing app: organizations get their own subdomain, cus
 | Frontend | Inertia + React + TypeScript (Laravel starter kit, Fortify, Wayfinder) | One app, no separate API; typed routes |
 | Database | PostgreSQL 17 + pgvector | Embeddings live next to the data; no separate vector DB |
 | Cache / sessions / queue | Redis 7 | Fast; needed for queued AI jobs |
+| AI (planned) | Python FastAPI + Ollama (local models) | Learn Python; free, private AI; Claude optional behind the same interface |
 | Runtime | Docker Compose (app, queue, nginx, postgres, redis, mailpit) | Same setup everywhere; PHP never installed on the host |
 
 ## Features so far
@@ -26,22 +27,23 @@ A multi-tenant support ticketing app: organizations get their own subdomain, cus
 
 `organizations` → `users` (with `roles`), `categories` (nested), `sla_policies`, `tickets`, `messages`, `kb_articles`. All IDs are `bigint`. See [ERD](erd.md).
 
-## AI features (planned)
+## AI features (planned, WBS weeks 4–6)
 
 None are built yet. The schema already has room for them.
 
-| Feature | Prepared in schema | Order |
-|---|---|---|
-| Similar tickets (semantic search) | `tickets.embedding` (pgvector, in ERD) | 1st |
-| KB article suggestions | `kb_articles.embedding`, `kb_article_ticket` pivot (in ERD) | 2nd |
-| Suggested replies (agent reviews before sending) | `messages.is_ai_generated` | 3rd |
-| Ticket summary | `tickets.ai_summary` | Later |
-| Sentiment (positive / neutral / negative) | `tickets.ai_sentiment`, `Sentiment` enum | Later |
+**Architecture:** Laravel ↔ a **Python FastAPI service** ↔ a **local model (Ollama)** for chat and embeddings. Laravel calls the service from queued jobs; vectors are stored and searched in Postgres with pgvector.
 
-- **How it will run:** Laravel calls the AI provider's API from queued jobs (Redis); pgvector does similarity search in Postgres. No Python service.
-- **Human in the loop:** AI drafts replies; agents send them. No fully automatic replies.
-- **Not planned:** category classification, priority prediction, customer chatbot.
-- **Open choices:** AI provider and embedding model (sets the vector size; the `embedding` migrations wait for it). Record them in an ADR.
+| Feature | How | Prepared in schema |
+|---|---|---|
+| Embeddings | Python `/embed`; a queued Laravel job stores vectors | `embedding` columns (in ERD, migration pending) |
+| RAG suggested replies | pgvector finds the top KB chunks; Python `/suggest-reply` returns a draft with its sources | `messages.is_ai_generated`, `kb_article_ticket` pivot |
+| Auto-triage | Python `/triage` returns category, priority, confidence (JSON); runs on ticket created | `category_id`, `priority` |
+| Summary, sentiment | Not in the WBS yet | `tickets.ai_summary`, `tickets.ai_sentiment` |
+
+- **Human in the loop:** agents accept, edit or reject suggestions; low-confidence triage goes to manual review.
+- **Provider layer:** one interface, two providers: Ollama (default) and Claude (off). Versioned prompts, timeouts, retries, prompt-injection guard (ticket text treated as data).
+- **Quality (week 6):** ~100 labeled tickets, accuracy per category with a confusion matrix, token/latency logging, fallback to a manual queue when the AI is down.
+- **Claude decision (week 7):** whether to enable the Claude API, decided by running the same evals on Claude Haiku vs the local model.
 - **Claude today:** used only as a coding assistant (Claude Code with Laravel Boost), not inside the app.
 
 ## Key decisions
@@ -73,7 +75,10 @@ None are built yet. The schema already has room for them.
 - **Test DB guard:** tests run on `ticketing_test`; `tests/TestCase.php` refuses any database not ending in `_test`.
 - **Static analysis:** Larastan level 7, no errors. **Style:** Pint.
 
-## Next
+## Next (from the WBS)
 
-- Business-hours SLA
-- First AI feature (embeddings + similar tickets)
+- CI with GitHub Actions
+- Rest of week 2: file attachments, flash messages, empty and loading states
+- Rest of week 3: events, SLA breach command, database notifications and bell, public API (Sanctum), Horizon
+- Week 4: Python + FastAPI + Ollama, then the AI features
+- Business-hours SLA (not in the WBS)
