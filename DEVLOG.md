@@ -74,6 +74,26 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-13 — Week 2 review (WBS 1.2.5.3)
+
+### Done
+- **Week 2 (frontend), all build tasks done:** shared TypeScript types, ticket list with pagination / search / filters, create form with validation errors, detail page with thread and replies, file attachments, agent actions (assign, status, priority, internal notes), toasts and empty / loading states, feature tests for each action, GitHub Actions CI with a README badge.
+- **Done early (from later weeks):** SLA due dates and recalculation, reopen on customer reply, queue worker, email notifications (Mailpit), Ollama with a local embedding model, and similar tickets (pgvector).
+- **Checks green locally:** Pint, Larastan level 7 (no errors), 103 tests (387 assertions), `tsc`, `npm run build`. **CI green on GitHub** for the latest completed runs.
+- **`docs/SUMMARY.md`** brought up to date (features, test count, CI, embeddings status, next steps).
+
+### Decisions
+- **Embeddings currently go Laravel → Ollama directly**, while the WBS plans Laravel → Python FastAPI → Ollama. To decide in week 4: route `EmbedTicket` through the Python service (only that job changes), or keep it in Laravel and adjust the plan.
+
+### Problems & fixes
+- None this review.
+
+### Next
+- [ ] Learning tasks still open in the WBS: TypeScript basics (1.2.1.1), Inertia basics (1.2.2.1)
+- [ ] Week 3: events + queued listeners, SLA breach command, in-app notifications + bell, Horizon, public API (Sanctum)
+
+---
+
 ## 2026-10-13 — Flash messages; empty and loading states (WBS 1.2.4.2)
 
 ### Done

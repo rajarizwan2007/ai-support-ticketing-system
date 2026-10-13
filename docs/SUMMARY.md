@@ -20,6 +20,8 @@ A multi-tenant support ticketing app: organizations get their own subdomain, cus
 - **Tickets:** list (paginated, with search and filters), detail with message thread, create, reply, internal notes (staff only), change status / priority / assignee. Every change is logged as a system message. A customer reply reopens a pending, resolved or closed ticket.
 - **References** `TKT-1001`, `TKT-1002`, … per organization.
 - **SLA:** due dates set on create from the matching policy and recalculated when the priority changes; `first_responded_at`, `resolved_at`, `closed_at` recorded automatically.
+- **File attachments** on tickets and replies (local storage; files on internal notes hidden from customers).
+- **Feedback in the UI:** success toasts after every ticket action, empty states, spinners and disabled controls while saving.
 - **Email notifications** (queued): new ticket → staff; public reply → the customer or the assigned agent; assignment → the new assignee. Mailpit catches them in development.
 - **Similar tickets** (staff only): each ticket is embedded by a local model (Ollama, `qwen3-embedding:0.6b`) in a queued job; the ticket page lists the 5 closest tickets in the organization (pgvector, cosine, HNSW index). Free, and ticket text never leaves the server.
 - **Demo data:** two orgs, `acme` and `globex`, with users, tickets and KB articles.
@@ -36,7 +38,7 @@ Similar tickets is built (see [ADR-002](adr/0002-ai-providers.md)); the rest are
 
 | Feature | How | Prepared in schema |
 |---|---|---|
-| Embeddings | Python `/embed`; a queued Laravel job stores vectors | `embedding` columns (in ERD, migration pending) |
+| Embeddings | **Built for tickets:** a queued Laravel job (`EmbedTicket`) calls Ollama directly and stores `tickets.embedding`. Routing it through the Python `/embed` service is decided in week 4. | `tickets.embedding` (done), `kb_articles.embedding` (pending) |
 | RAG suggested replies | pgvector finds the top KB chunks; Python `/suggest-reply` returns a draft with its sources | `messages.is_ai_generated`, `kb_article_ticket` pivot |
 | Auto-triage | Python `/triage` returns category, priority, confidence (JSON); runs on ticket created | `category_id`, `priority` |
 | Summary, sentiment | Not in the WBS yet | `tickets.ai_summary`, `tickets.ai_sentiment` |
@@ -72,14 +74,13 @@ Similar tickets is built (see [ADR-002](adr/0002-ai-providers.md)); the rest are
 
 ## Quality
 
-- **Tests:** PHPUnit, 86 passing. Tenant isolation and role permissions are tested at two levels (model/policy and real HTTP requests).
+- **Tests:** PHPUnit, 103 passing. Tests never call real HTTP services (`Http::preventStrayRequests()`). Tenant isolation and role permissions are tested at two levels (model/policy and real HTTP requests).
 - **Test DB guard:** tests run on `ticketing_test`; `tests/TestCase.php` refuses any database not ending in `_test`.
 - **Static analysis:** Larastan level 7, no errors. **Style:** Pint.
+- **CI:** GitHub Actions runs Pint, Larastan, the frontend build, the type check and the tests on every push.
 
 ## Next (from the WBS)
 
-- CI with GitHub Actions
-- Rest of week 2: file attachments, flash messages, empty and loading states
-- Rest of week 3: events, SLA breach command, database notifications and bell, public API (Sanctum), Horizon
+- Week 3: events, SLA breach command, database notifications and bell, public API (Sanctum), Horizon
 - Week 4: Python + FastAPI + Ollama, then the AI features
 - Business-hours SLA (not in the WBS)
