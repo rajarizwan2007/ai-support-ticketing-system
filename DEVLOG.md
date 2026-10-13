@@ -5,6 +5,26 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-13 — CI (GitHub Actions)
+
+### Done
+- **`.github/workflows/ci.yml`:** on every push to `main` and on pull requests, one job runs Pint (`--test`), Larastan, the frontend build, `tsc` and the PHPUnit tests against a `pgvector/pgvector:pg17` service (`ticketing_test`). First run green in about 70 s.
+- **CI badge** in the README. WBS 1.2.5.1 and 1.2.5.2 marked done.
+
+### Decisions
+- **One job, steps in order:** simplest; the whole run is about a minute.
+- **PHP runs directly on the runner (setup-php), not through Docker Compose:** faster, and only Postgres is needed (tests use array cache/session and the sync queue).
+- **`WAYFINDER_COMMAND` env var in `vite.config.ts`:** locally Wayfinder runs through `docker compose exec`; CI sets it to `php artisan wayfinder:generate`.
+- **Build before tests:** the Inertia tests need the Vite manifest.
+- **`vp check` (frontend lint and format) is not in CI yet:** it reports formatting issues in 23 files, mostly starter-kit code and docs. Fix with `vp check --fix` and add it later.
+
+### Next
+- [ ] Rest of week 2: attachments, flash messages, empty and loading states
+- [ ] Rest of week 3: events, SLA breach command, database notifications and bell, API, Horizon
+- [ ] Optional: `vp check` in CI
+
+---
+
 ## 2026-10-13 — WBS review and summary fix
 
 ### Done
