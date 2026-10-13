@@ -352,4 +352,30 @@ class TicketPagesTest extends TestCase
             ->get(route('tickets.index', ['search' => 'login']))
             ->assertInertia(fn (Assert $page) => $page->has('tickets.data', 1)->has('staff', 0));
     }
+
+    public function test_a_customer_reply_reopens_a_resolved_ticket(): void
+    {
+        $customer = User::factory()->customer()->create(['name' => 'Pat Customer']);
+        $ticket = Ticket::factory()->create(['requester_id' => $customer->id, 'status' => 'resolved', 'resolved_at' => now()]);
+
+        $this->actingAs($customer)->post(route('tickets.reply', $ticket->reference), ['body' => 'Still broken.']);
+
+        $ticket->refresh();
+        $this->assertSame(TicketStatus::Open, $ticket->status);
+        $this->assertNull($ticket->resolved_at);
+        $this->assertSame('Status changed to open by Pat Customer.', $ticket->messages()->where('type', MessageType::System)->sole()->body);
+    }
+
+    public function test_replies_that_should_not_reopen_a_ticket_leave_the_status_alone(): void
+    {
+        $customer = User::factory()->customer()->create();
+        $onHold = Ticket::factory()->create(['requester_id' => $customer->id, 'status' => 'on_hold']);
+        $resolved = Ticket::factory()->create(['status' => 'resolved']);
+
+        $this->actingAs($customer)->post(route('tickets.reply', $onHold->reference), ['body' => 'Any news?']);
+        $this->actingAs(User::factory()->agent()->create())->post(route('tickets.reply', $resolved->reference), ['body' => 'Glad it works.']);
+
+        $this->assertSame(TicketStatus::OnHold, $onHold->fresh()->status);
+        $this->assertSame(TicketStatus::Resolved, $resolved->fresh()->status);
+    }
 }

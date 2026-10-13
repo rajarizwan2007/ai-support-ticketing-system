@@ -5,6 +5,24 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-13 — Reopen a ticket when the customer replies
+
+### Done
+- **`ReplyToTicket`**: a customer reply on a pending, resolved or closed ticket sets it back to open, through `UpdateTicket`, so it is logged ("Status changed to open by …") and the status hook clears `resolved_at` / `closed_at`.
+- **Tests:** 2 more in `TicketPagesTest`. Suite: 80 passing; Larastan clean.
+
+### Decisions
+- **Pending reopens too:** pending means "waiting on the customer", so their reply puts it back in the agents' queue.
+- **On hold does not:** it means waiting on something else (a third party, a fix), which the customer's reply doesn't change.
+- **Closed reopens as well** (no separate follow-up ticket). Simple; revisit if closed should be final.
+
+### Next
+- [ ] Email notifications (needs a queue worker)
+- [ ] First AI feature: similar tickets (provider/embedding ADR first)
+- [ ] Business-hours SLA
+
+---
+
 ## 2026-10-13 — Search and filters on the ticket list
 
 ### Done

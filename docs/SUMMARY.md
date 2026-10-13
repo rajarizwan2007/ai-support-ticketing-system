@@ -16,7 +16,7 @@ A multi-tenant support ticketing app: organizations get their own subdomain, cus
 
 - **Login** per organization subdomain (no public registration).
 - **Roles:** admin, agent, customer (one role per user).
-- **Tickets:** list (paginated, with search and filters), detail with message thread, create, reply, internal notes (staff only), change status / priority / assignee. Every change is logged as a system message.
+- **Tickets:** list (paginated, with search and filters), detail with message thread, create, reply, internal notes (staff only), change status / priority / assignee. Every change is logged as a system message. A customer reply reopens a pending, resolved or closed ticket.
 - **References** `TKT-1001`, `TKT-1002`, … per organization.
 - **SLA:** due dates set on create from the matching policy and recalculated when the priority changes; `first_responded_at`, `resolved_at`, `closed_at` recorded automatically.
 - **Demo data:** two orgs, `acme` and `globex`, with users, tickets and KB articles.
@@ -68,12 +68,12 @@ None are built yet. The schema already has room for them.
 
 ## Quality
 
-- **Tests:** PHPUnit, 78 passing. Tenant isolation and role permissions are tested at two levels (model/policy and real HTTP requests).
+- **Tests:** PHPUnit, 80 passing. Tenant isolation and role permissions are tested at two levels (model/policy and real HTTP requests).
 - **Test DB guard:** tests run on `ticketing_test`; `tests/TestCase.php` refuses any database not ending in `_test`.
 - **Static analysis:** Larastan level 7, no errors. **Style:** Pint.
 
 ## Next
 
-- Reopen on customer reply; notifications
+- Email notifications
 - Business-hours SLA
 - Queue worker, then first AI feature (embeddings + similar tickets)
