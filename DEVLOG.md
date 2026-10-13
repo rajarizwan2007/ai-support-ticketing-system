@@ -5,6 +5,35 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-13 — Queue worker and email notifications
+
+### Done
+- **Docker:** `queue` service (same image as `app`, runs `php artisan queue:listen --tries=3`) and `mailpit` (inbox UI at http://localhost:8025). `.env` / `.env.example` now send mail over SMTP to `mailpit:1025`.
+- **Notifications** (`app/Notifications`, all queued, mail only):
+  - `TicketCreated`: a new ticket emails the organization's admins and agents (not the requester).
+  - `TicketReplied`: a public reply emails the other side: a staff reply → the customer; a customer reply → the assigned agent. Internal notes email nobody.
+  - `TicketAssigned`: emails the new assignee, unless they assigned it to themselves.
+- **Links in emails:** `Organization::url()` and `Ticket::url()` build absolute URLs on the tenant subdomain (`http://acme.localhost:8088/tickets/TKT-1001`).
+- **Tests:** new `TicketNotificationsTest` (6 tests). Suite: 86 passing; Larastan clean.
+- **Checked by hand:** a notification queued in the `acme` context ran in the real worker, reached Mailpit, and linked to the acme subdomain.
+- **App name:** `APP_NAME=ai-support-ticketing-system` (`.env`, `.env.example`), so emails (sender name, header, sign-off, footer) and the page title no longer say "Laravel".
+
+### Decisions
+- **`queue:listen`, not `queue:work`, in development:** slower per job, but it loads fresh code, so there's no stale worker after an edit. Production should use `queue:work` (plus a restart on deploy).
+- **Notifications are sent from the action classes**, next to the change that causes them.
+- **Tenant context reaches the job via Laravel Context**, as planned in ADR-001: the hidden organization id is serialized with the job and restored before the job's models load.
+- **Emails need absolute tenant URLs:** a queued job has no request host, so `route()` alone would link to `localhost:8088` (no tenant, 404).
+
+### Problems & fixes
+- A `queue` service with only `image: ai-support-ticketing-app` worked here but depends on `app` having been built first; on a fresh clone Compose could try to pull it from a registry. Fixed by giving it the same `build:` block as `app` (cached, so no extra build time).
+- After changing `APP_NAME`, queued emails stopped arriving. The Redis key prefix is built from `APP_NAME`, and the running `queue:listen` still had the old name (its worker processes inherit the parent's environment), so it watched the old queue. Fixed with `docker compose restart queue`; noted in `CLAUDE.md` and the README.
+
+### Next
+- [ ] First AI feature: similar tickets (provider/embedding ADR first)
+- [ ] Business-hours SLA
+
+---
+
 ## 2026-10-13 — Reopen a ticket when the customer replies
 
 ### Done

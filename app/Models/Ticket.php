@@ -108,6 +108,14 @@ class Ticket extends Model
     }
 
     /**
+     * Absolute link to the ticket on its organization's subdomain.
+     */
+    public function url(): string
+    {
+        return $this->organization->url(route('tickets.show', $this->reference, false));
+    }
+
+    /**
      * Customers only see the tickets they requested; agents and admins see all.
      *
      * @param  Builder<Ticket>  $query

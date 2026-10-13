@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Context;
+use Illuminate\Support\Str;
 
 /**
  * The tenant. Its hasMany relations (users, tickets, ...) also pass through the
@@ -54,6 +55,15 @@ class Organization extends Model
     public static function forgetCurrent(): void
     {
         Context::forgetHidden(self::CURRENT_KEY);
+    }
+
+    /**
+     * Absolute URL on this organization's subdomain (http://acme.localhost:8088/path).
+     * Emails and queued jobs need it: they have no request host to build links from.
+     */
+    public function url(string $path = '/'): string
+    {
+        return Str::replaceFirst('://', "://{$this->slug}.", rtrim((string) config('app.url'), '/')).$path;
     }
 
     /**

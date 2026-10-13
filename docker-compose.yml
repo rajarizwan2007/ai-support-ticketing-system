@@ -32,6 +32,45 @@ services:
     networks:
       - ticketing
 
+  queue:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    container_name: ticketing-queue
+    restart: unless-stopped
+    working_dir: /var/www/html
+    # queue:listen reloads the code for every job, so code changes apply without a restart.
+    command: ["php", "artisan", "queue:listen", "--tries=3"]
+    volumes:
+      - ./:/var/www/html
+      - ./docker/php/php.ini:/usr/local/etc/php/conf.d/zz-app.ini:ro
+    environment:
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-ticketing}
+      DB_USERNAME: ${DB_USERNAME:-ticketing}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-null}
+    depends_on:
+      - app
+    networks:
+      - ticketing
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    container_name: ticketing-mailpit
+    restart: unless-stopped
+    ports:
+      - "${FORWARD_MAILPIT_UI_PORT:-8025}:8025"
+    networks:
+      - ticketing
+
   nginx:
     image: nginx:1.27-alpine
     container_name: ticketing-nginx
