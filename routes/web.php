@@ -13,6 +13,7 @@ Route::middleware('auth')->group(function () {
     Route::get('tickets/{ticket:reference}', [TicketController::class, 'show'])->name('tickets.show');
     Route::patch('tickets/{ticket:reference}', [TicketController::class, 'update'])->name('tickets.update');
     Route::post('tickets/{ticket:reference}/messages', [TicketController::class, 'reply'])->name('tickets.reply');
+    Route::get('tickets/{ticket:reference}/attachments/{attachment}', [TicketController::class, 'attachment'])->name('tickets.attachments.show')->scopeBindings();
 });
 
 require __DIR__.'/settings.php';

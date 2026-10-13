@@ -6,18 +6,22 @@ use App\Enums\Priority;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Notifications\TicketCreated;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Notification;
 
 class CreateTicket
 {
+    public function __construct(private AddAttachments $addAttachments) {}
+
     /**
      * Open a ticket for the requester, with the next reference and SLA due
-     * dates from the organization's active policy for its priority, and
-     * email the organization's staff (except the requester).
+     * dates from the organization's active policy for its priority, store
+     * any attached files, and email the organization's staff (except the requester).
      *
      * @param  array{subject: string, description: string, category_id?: int|string|null, priority?: string}  $attributes
+     * @param  array<int, UploadedFile>  $files
      */
-    public function handle(User $requester, array $attributes): Ticket
+    public function handle(User $requester, array $attributes, array $files = []): Ticket
     {
         $ticket = new Ticket([
             ...$attributes,
@@ -28,6 +32,8 @@ class CreateTicket
 
         $ticket->applySlaPolicy();
         $ticket->save();
+
+        $this->addAttachments->handle($ticket, $requester, $files);
 
         Notification::send(User::staff()->whereKeyNot($requester->id)->get(), new TicketCreated($ticket));
 

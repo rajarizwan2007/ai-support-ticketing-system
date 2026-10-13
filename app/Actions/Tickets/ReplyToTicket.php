@@ -8,23 +8,29 @@ use App\Models\Role;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Notifications\TicketReplied;
+use Illuminate\Http\UploadedFile;
 
 class ReplyToTicket
 {
-    public function __construct(private UpdateTicket $updateTicket) {}
+    public function __construct(private UpdateTicket $updateTicket, private AddAttachments $addAttachments) {}
 
     /**
-     * Add a reply or internal note, recording the first staff response time.
-     * A customer reply reopens a ticket that is pending, resolved or closed.
-     * A public reply emails the other side: the customer, or the assigned agent.
+     * Add a reply or internal note with any attached files, recording the first
+     * staff response time. A customer reply reopens a ticket that is pending,
+     * resolved or closed. A public reply emails the other side: the customer,
+     * or the assigned agent.
+     *
+     * @param  array<int, UploadedFile>  $files
      */
-    public function handle(Ticket $ticket, User $user, string $body, bool $isInternal = false): void
+    public function handle(Ticket $ticket, User $user, string $body, bool $isInternal = false, array $files = []): void
     {
         $message = $ticket->messages()->create([
             'user_id' => $user->id,
             'type' => $isInternal ? MessageType::InternalNote : MessageType::Reply,
             'body' => $body,
         ]);
+
+        $this->addAttachments->handle($ticket, $user, $files, $message);
 
         $isCustomer = $user->hasRole(Role::CUSTOMER);
         $recipient = $isCustomer ? $ticket->assignee : $ticket->requester;

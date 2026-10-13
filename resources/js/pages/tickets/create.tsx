@@ -1,4 +1,5 @@
 import { Form, Head } from '@inertiajs/react';
+import AttachmentInput from '@/components/attachment-input';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -78,6 +79,11 @@ export default function TicketsCreate({ categories, priorities }: Props) {
                                 </select>
                                 <InputError message={errors.priority} />
                             </div>
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label>Attachments</Label>
+                            <AttachmentInput errors={errors} />
                         </div>
 
                         <Button

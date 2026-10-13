@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\TicketStatus;
+use App\Models\Attachment;
 use App\Models\Organization;
 use App\Models\Ticket;
 use App\Models\User;
@@ -57,6 +58,17 @@ class TenantIsolationTest extends TestCase
         $this->globex->makeCurrent();
         $this->assertSame(TicketStatus::Open, $this->globexTicket->fresh()->status);
         $this->assertSame(0, $this->globexTicket->messages()->count());
+    }
+
+    public function test_another_organizations_attachment_cannot_be_downloaded(): void
+    {
+        $this->globex->makeCurrent();
+        $attachment = Attachment::factory()->for($this->globexTicket)->create();
+        $this->acme->makeCurrent();
+
+        $this->actingAs($this->acmeAdmin)
+            ->get(route('tickets.attachments.show', ['TKT-2000', $attachment]))
+            ->assertNotFound();
     }
 
     public function test_the_same_reference_in_two_organizations_opens_each_ones_own_ticket(): void

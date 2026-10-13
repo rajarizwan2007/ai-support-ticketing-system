@@ -52,4 +52,16 @@ export type Message = {
     body: string;
     created_at: string;
     author?: UserSummary | null;
+    attachments?: Attachment[];
+};
+
+export type Attachment = {
+    id: number;
+    ticket_id: number;
+    message_id: number | null;
+    user_id: number | null;
+    original_name: string;
+    mime_type: string;
+    size: number;
+    created_at: string;
 };

@@ -1,9 +1,12 @@
 import { Form, Head, router } from '@inertiajs/react';
+import AttachmentInput from '@/components/attachment-input';
+import AttachmentList from '@/components/attachment-list';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { index, reply, update } from '@/routes/tickets';
 import type {
+    Attachment,
     Message,
     Priority,
     Ticket,
@@ -13,6 +16,7 @@ import type {
 
 type Props = {
     ticket: Ticket;
+    attachments: Attachment[];
     messages: Message[];
     canUpdate: boolean;
     statuses: TicketStatus[];
@@ -22,6 +26,7 @@ type Props = {
 
 export default function TicketsShow({
     ticket,
+    attachments,
     messages,
     canUpdate,
     statuses,
@@ -118,6 +123,10 @@ export default function TicketsShow({
                     <p className="mt-4 whitespace-pre-line">
                         {ticket.description}
                     </p>
+                    <AttachmentList
+                        ticketReference={ticket.reference}
+                        attachments={attachments}
+                    />
                 </div>
 
                 <div className="flex flex-col gap-3">
@@ -137,6 +146,10 @@ export default function TicketsShow({
                             <p className="whitespace-pre-line">
                                 {message.body}
                             </p>
+                            <AttachmentList
+                                ticketReference={ticket.reference}
+                                attachments={message.attachments ?? []}
+                            />
                         </div>
                     ))}
                 </div>
@@ -158,6 +171,7 @@ export default function TicketsShow({
                                 className="rounded-md border bg-background p-2 text-sm"
                             />
                             <InputError message={errors.body} />
+                            <AttachmentInput errors={errors} />
                             <div className="flex items-center gap-4">
                                 <Button type="submit" disabled={processing}>
                                     Send

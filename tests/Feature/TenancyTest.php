@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Exceptions\MissingOrganizationException;
+use App\Models\Attachment;
 use App\Models\Category;
 use App\Models\KbArticle;
 use App\Models\Message;
@@ -44,6 +45,7 @@ class TenancyTest extends TestCase
             'tickets' => [Ticket::class],
             'messages' => [Message::class],
             'kb articles' => [KbArticle::class],
+            'attachments' => [Attachment::class],
         ];
     }
 

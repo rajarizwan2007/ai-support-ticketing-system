@@ -175,4 +175,14 @@ class Ticket extends Model
     {
         return $this->hasMany(Message::class);
     }
+
+    /**
+     * Every file on the ticket, including those uploaded with messages.
+     *
+     * @return HasMany<Attachment, $this>
+     */
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(Attachment::class);
+    }
 }

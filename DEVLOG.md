@@ -5,6 +5,33 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-13 — File attachments
+
+### Done
+- **`attachments` table** (`organization_id`, `ticket_id`, nullable `message_id`, uploader, path, original name, MIME type, size), `Attachment` model (tenant-scoped, `path` hidden) and factory. ERD updated.
+- **Upload** on the new ticket form and the reply form: up to 3 files, 5 MB each (images, PDF, text/CSV/log, Word, Excel, zip). `AddAttachments` action, called from `CreateTicket` and `ReplyToTicket`, stores files on the private `local` disk under `attachments/{organization_id}/`.
+- **Download:** `GET /tickets/{reference}/attachments/{id}` (`scopeBindings()`, so the file must belong to that ticket). Same rule as the ticket page (`view` policy); files on internal notes are a 404 for customers.
+- **Ticket page** lists the ticket's files under the description and each message's files under the message.
+- **Tests:** new `TicketAttachmentsTest` (8), plus attachments in `TenancyTest` and a cross-organization download case in `TenantIsolationTest`. Suite: 97 passing; Larastan clean. Checked by hand: real upload through nginx and download with the original filename.
+- WBS 1.2.3.3 marked done.
+
+### Decisions
+- **`ticket_id` + optional `message_id`, not polymorphic** (the ERD had suggested polymorphic): every file belongs to a ticket, so access is one question, "can you view this ticket?". Simpler queries and no `attachable_type` strings.
+- **Private disk + download route**, never a public URL: the policy runs on every download.
+- **3 × 5 MB** keeps a request under the 25 MB PHP (`post_max_size`) and nginx (`client_max_body_size`) limits.
+- **The type is checked from the file's content** (Laravel's `File::types`), not only its extension.
+
+### Problems & fixes
+- `UploadedFile::fake()->image()` needs GD, which the PHP image doesn't have. → Tests use `fake()->create('x.png', …, 'image/png')`.
+- Larastan read `Message::$type` as a string. → `@property MessageType $type`, like `Ticket`.
+- `curl` on the host doesn't resolve `*.localhost`; use `--resolve acme.localhost:8088:127.0.0.1` for manual checks.
+
+### Next
+- [ ] Files stay on disk if a ticket is force-deleted (tickets are soft-deleted today); clean up when hard deletes arrive
+- [ ] Flash messages; empty and loading states (WBS 1.2.4.2)
+
+---
+
 ## 2026-10-13 — CI (GitHub Actions)
 
 ### Done

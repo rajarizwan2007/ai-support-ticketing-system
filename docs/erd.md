@@ -10,6 +10,7 @@ erDiagram
     organizations ||--o{ tickets : owns
     organizations ||--o{ kb_articles : publishes
     organizations ||--o{ messages : owns
+    organizations ||--o{ attachments : owns
 
     roles ||--o{ users : "assigned to"
 
@@ -25,6 +26,9 @@ erDiagram
     sla_policies |o--o{ tickets : "applies to"
 
     tickets ||--o{ messages : contains
+    tickets ||--o{ attachments : has
+    messages |o--o{ attachments : has
+    users |o--o{ attachments : uploads
 
     organizations {
         bigint id PK
@@ -118,6 +122,20 @@ erDiagram
         timestamp updated_at
     }
 
+    attachments {
+        bigint id PK
+        bigint organization_id FK
+        bigint ticket_id FK
+        bigint message_id FK "nullable: null = uploaded with the ticket"
+        bigint user_id FK "uploader, nullable"
+        string path "private local disk"
+        string original_name
+        string mime_type
+        bigint size "bytes"
+        timestamp created_at
+        timestamp updated_at
+    }
+
     kb_articles {
         bigint id PK
         bigint organization_id FK
@@ -145,6 +163,7 @@ erDiagram
 | users → tickets (`assignee_id`) | one-to-many, optional | The agent working on it; null = unassigned |
 | tickets → messages | one-to-many | The conversation thread |
 | users → messages | one-to-many, optional | Null author = system message (e.g. "status changed") |
+| tickets → attachments | one-to-many | Every file on the ticket; `message_id` set when uploaded with a reply |
 | categories → categories (`parent_id`) | self-referencing | Lets categories nest, e.g. Billing → Refunds |
 | categories → tickets, kb_articles | one-to-many, optional | Shared taxonomy, so a ticket's category can point to matching articles |
 | sla_policies → tickets | one-to-many, optional | Chosen by priority when the ticket is created |
@@ -160,10 +179,10 @@ erDiagram
 - **`embedding` columns use pgvector** (not created yet: added in a later migration once the embedding model, and so the vector size, is chosen). The size (e.g. `vector(1024)`) depends on the embedding model. These columns power similar-ticket search and "suggested KB articles".
 - **Tickets are soft-deleted** (`deleted_at`), so history and SLA reporting survive deletion.
 - **`messages.type = internal_note`** keeps agent-only notes in the same thread. They're filtered out of what customers see.
+- **Attachments always have a `ticket_id`, plus an optional `message_id`** (not polymorphic). Access is always "can you view this ticket?", and files on internal notes are hidden from customers like the notes. Files live on the private disk and are only served through a download route.
 
 ## Possible later additions
 
-- `attachments` (polymorphic, for tickets and messages)
 - `kb_article_ticket` pivot: which articles were suggested or used to resolve a ticket
 - `tags` with a `ticket_tag` pivot
 - `ticket_events` audit log (status, assignee and priority changes)
