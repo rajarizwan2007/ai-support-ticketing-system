@@ -312,4 +312,44 @@ class TicketPagesTest extends TestCase
         $this->assertEquals(now()->subHour()->addMinutes($urgent->first_response_minutes), $ticket->first_response_due_at);
         $this->assertEquals(now()->subHour()->addMinutes($urgent->resolution_minutes), $ticket->resolution_due_at);
     }
+
+    public function test_the_list_can_be_searched_by_reference_or_subject(): void
+    {
+        Ticket::factory()->create(['reference' => 'TKT-5001', 'subject' => 'Printer on fire']);
+        Ticket::factory()->create(['reference' => 'TKT-5002', 'subject' => 'Refund request']);
+        $this->actingAs(User::factory()->agent()->create());
+
+        $this->get(route('tickets.index', ['search' => 'printer']))
+            ->assertInertia(fn (Assert $page) => $page->has('tickets.data', 1)->where('tickets.data.0.reference', 'TKT-5001'));
+
+        $this->get(route('tickets.index', ['search' => 'tkt-5002']))
+            ->assertInertia(fn (Assert $page) => $page->has('tickets.data', 1)->where('tickets.data.0.reference', 'TKT-5002'));
+    }
+
+    public function test_the_list_can_be_filtered_by_status_priority_and_assignee(): void
+    {
+        $agent = User::factory()->agent()->create();
+        Ticket::factory()->create(['status' => 'open', 'priority' => 'high', 'assignee_id' => $agent->id]);
+        Ticket::factory()->create(['status' => 'open', 'priority' => 'low', 'assignee_id' => null]);
+        Ticket::factory()->create(['status' => 'closed', 'priority' => 'high', 'assignee_id' => null]);
+        $this->actingAs($agent);
+
+        $this->get(route('tickets.index', ['status' => 'open']))->assertInertia(fn (Assert $page) => $page->has('tickets.data', 2));
+        $this->get(route('tickets.index', ['priority' => 'high']))->assertInertia(fn (Assert $page) => $page->has('tickets.data', 2));
+        $this->get(route('tickets.index', ['assignee' => $agent->id]))->assertInertia(fn (Assert $page) => $page->has('tickets.data', 1));
+        $this->get(route('tickets.index', ['assignee' => 'unassigned']))->assertInertia(fn (Assert $page) => $page->has('tickets.data', 2));
+        $this->get(route('tickets.index', ['status' => 'open', 'priority' => 'high']))->assertInertia(fn (Assert $page) => $page->has('tickets.data', 1));
+        $this->get(route('tickets.index', ['status' => 'exploded']))->assertInertia(fn (Assert $page) => $page->has('tickets.data', 3));
+    }
+
+    public function test_searching_does_not_show_customers_other_peoples_tickets(): void
+    {
+        $customer = User::factory()->customer()->create();
+        Ticket::factory()->create(['requester_id' => $customer->id, 'subject' => 'Login broken']);
+        Ticket::factory()->create(['subject' => 'Login broken too']);
+
+        $this->actingAs($customer)
+            ->get(route('tickets.index', ['search' => 'login']))
+            ->assertInertia(fn (Assert $page) => $page->has('tickets.data', 1)->has('staff', 0));
+    }
 }

@@ -1,8 +1,9 @@
-import { Head, Link } from '@inertiajs/react';
+import { Form, Head, Link } from '@inertiajs/react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { create, index, show } from '@/routes/tickets';
-import type { Ticket } from '@/types';
+import type { Priority, Ticket, TicketStatus, UserSummary } from '@/types';
 
 type Props = {
     tickets: {
@@ -12,9 +13,26 @@ type Props = {
         prev_page_url: string | null;
         next_page_url: string | null;
     };
+    filters: {
+        search?: string;
+        status?: string;
+        priority?: string;
+        assignee?: string;
+    };
+    statuses: TicketStatus[];
+    priorities: Priority[];
+    staff: UserSummary[];
 };
 
-export default function TicketsIndex({ tickets }: Props) {
+const selectClassName = 'rounded-md border bg-background px-2 text-sm';
+
+export default function TicketsIndex({
+    tickets,
+    filters,
+    statuses,
+    priorities,
+    staff,
+}: Props) {
     return (
         <>
             <Head title="Tickets" />
@@ -22,6 +40,69 @@ export default function TicketsIndex({ tickets }: Props) {
                 <Button asChild className="mb-4">
                     <Link href={create()}>New ticket</Link>
                 </Button>
+
+                <Form
+                    {...index.form()}
+                    options={{ preserveState: true }}
+                    className="mb-4 flex flex-wrap gap-2"
+                >
+                    <Input
+                        name="search"
+                        defaultValue={filters.search}
+                        placeholder="Search reference or subject"
+                        aria-label="Search"
+                        className="w-64"
+                    />
+                    <select
+                        name="status"
+                        defaultValue={filters.status ?? ''}
+                        aria-label="Status"
+                        className={selectClassName}
+                    >
+                        <option value="">Any status</option>
+                        {statuses.map((status) => (
+                            <option key={status} value={status}>
+                                {status.replace('_', ' ')}
+                            </option>
+                        ))}
+                    </select>
+                    <select
+                        name="priority"
+                        defaultValue={filters.priority ?? ''}
+                        aria-label="Priority"
+                        className={selectClassName}
+                    >
+                        <option value="">Any priority</option>
+                        {priorities.map((priority) => (
+                            <option key={priority} value={priority}>
+                                {priority}
+                            </option>
+                        ))}
+                    </select>
+                    {staff.length > 0 && (
+                        <select
+                            name="assignee"
+                            defaultValue={filters.assignee ?? ''}
+                            aria-label="Assignee"
+                            className={selectClassName}
+                        >
+                            <option value="">Any assignee</option>
+                            <option value="unassigned">Unassigned</option>
+                            {staff.map((user) => (
+                                <option key={user.id} value={user.id}>
+                                    {user.name}
+                                </option>
+                            ))}
+                        </select>
+                    )}
+                    <Button type="submit" variant="secondary">
+                        Filter
+                    </Button>
+                    <Button asChild variant="ghost">
+                        <Link href={index()}>Clear</Link>
+                    </Button>
+                </Form>
+
                 <table className="w-full text-left text-sm">
                     <thead className="border-b text-muted-foreground">
                         <tr>

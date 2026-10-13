@@ -23,11 +23,26 @@ class TicketController extends Controller
 {
     public function index(Request $request): Response
     {
+        $search = $request->string('search')->trim()->value();
+        $status = TicketStatus::tryFrom($request->string('status')->value());
+        $priority = Priority::tryFrom($request->string('priority')->value());
+        $assignee = $request->string('assignee')->value();
+
         return Inertia::render('tickets/index', [
             'tickets' => Ticket::visibleTo($request->user())
                 ->with('requester:id,name', 'assignee:id,name')
+                ->when($search !== '', fn ($query) => $query->whereAny(['reference', 'subject'], 'ilike', '%'.$search.'%'))
+                ->when($status, fn ($query) => $query->where('status', $status))
+                ->when($priority, fn ($query) => $query->where('priority', $priority))
+                ->when($assignee === 'unassigned', fn ($query) => $query->whereNull('assignee_id'))
+                ->when(ctype_digit($assignee), fn ($query) => $query->where('assignee_id', $assignee))
                 ->latest()
-                ->paginate(20),
+                ->paginate(20)
+                ->withQueryString(),
+            'filters' => $request->only('search', 'status', 'priority', 'assignee'),
+            'statuses' => array_column(TicketStatus::cases(), 'value'),
+            'priorities' => array_column(Priority::cases(), 'value'),
+            'staff' => $request->user()->hasRole(Role::CUSTOMER) ? [] : User::staff()->orderBy('name')->get(['id', 'name']),
         ]);
     }
 

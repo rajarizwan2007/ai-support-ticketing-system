@@ -5,6 +5,25 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-13 — Search and filters on the ticket list
+
+### Done
+- **Ticket list filters:** search (reference or subject, case-insensitive), status, priority and assignee (a staff member, or "Unassigned"; staff only). A GET form keeps filters in the URL, and pagination keeps them (`withQueryString()`).
+- **Tests:** 3 more in `TicketPagesTest`. Suite: 78 passing; Larastan clean.
+
+### Decisions
+- **Postgres `ilike` via `whereAny()`**, no search package; enough until AI similarity search arrives.
+- **Unknown filter values are ignored** (`tryFrom`), not validation errors: a bad URL just shows the unfiltered list.
+- **Filters stack on `visibleTo()`**, so customers searching still see only their own tickets.
+
+### Next
+- [ ] Reopen a ticket when the customer replies
+- [ ] Email notifications (needs a queue worker)
+- [ ] First AI feature: similar tickets (provider/embedding ADR first)
+- [ ] Business-hours SLA
+
+---
+
 ## 2026-10-12 — Recalculate SLA due dates on priority change
 
 ### Done
