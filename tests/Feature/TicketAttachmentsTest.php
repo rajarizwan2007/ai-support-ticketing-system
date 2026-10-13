@@ -27,6 +27,7 @@ class TicketAttachmentsTest extends TestCase
         Storage::fake('local');
 
         $this->inOrganization();
+        $this->fakeEmbeddings();
         $this->customer = User::factory()->customer()->create();
         $this->ticket = Ticket::factory()->create(['requester_id' => $this->customer->id]);
     }

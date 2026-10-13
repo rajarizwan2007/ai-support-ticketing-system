@@ -93,6 +93,12 @@ class TicketController extends Controller
             'statuses' => array_column(TicketStatus::cases(), 'value'),
             'priorities' => array_column(Priority::cases(), 'value'),
             'staff' => $canUpdate ? User::staff()->orderBy('name')->get(['id', 'name']) : [],
+            'similarTickets' => $canUpdate && $ticket->embedding
+                ? Ticket::whereKeyNot($ticket->id)
+                    ->whereVectorSimilarTo('embedding', $ticket->embedding, minSimilarity: 0.5)
+                    ->limit(5)
+                    ->get(['id', 'reference', 'subject', 'status'])
+                : [],
         ]);
     }
 

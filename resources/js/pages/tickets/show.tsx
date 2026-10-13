@@ -1,10 +1,10 @@
-import { Form, Head, router } from '@inertiajs/react';
+import { Form, Head, Link, router } from '@inertiajs/react';
 import AttachmentInput from '@/components/attachment-input';
 import AttachmentList from '@/components/attachment-list';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { index, reply, update } from '@/routes/tickets';
+import { index, reply, show, update } from '@/routes/tickets';
 import type {
     Attachment,
     Message,
@@ -22,6 +22,7 @@ type Props = {
     statuses: TicketStatus[];
     priorities: Priority[];
     staff: UserSummary[];
+    similarTickets: Pick<Ticket, 'id' | 'reference' | 'subject' | 'status'>[];
 };
 
 export default function TicketsShow({
@@ -32,6 +33,7 @@ export default function TicketsShow({
     statuses,
     priorities,
     staff,
+    similarTickets,
 }: Props) {
     return (
         <>
@@ -128,6 +130,27 @@ export default function TicketsShow({
                         attachments={attachments}
                     />
                 </div>
+
+                {similarTickets.length > 0 && (
+                    <div className="flex flex-col gap-1 text-sm">
+                        <h2 className="font-semibold">Similar tickets</h2>
+                        {similarTickets.map((similar) => (
+                            <Link
+                                key={similar.id}
+                                href={show(similar.reference)}
+                                className="flex gap-2 hover:underline"
+                            >
+                                <span className="text-muted-foreground">
+                                    {similar.reference}
+                                </span>
+                                <span>{similar.subject}</span>
+                                <Badge variant="secondary">
+                                    {similar.status.replace('_', ' ')}
+                                </Badge>
+                            </Link>
+                        ))}
+                    </div>
+                )}
 
                 <div className="flex flex-col gap-3">
                     <h2 className="font-semibold">Messages</h2>

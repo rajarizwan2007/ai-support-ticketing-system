@@ -24,6 +24,7 @@ class TicketPagesTest extends TestCase
         parent::setUp();
 
         $this->inOrganization();
+        $this->fakeEmbeddings();
     }
 
     public function test_agents_see_every_ticket_in_the_organization(): void

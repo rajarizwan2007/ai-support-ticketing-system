@@ -9,8 +9,10 @@ use App\Enums\TicketStatus;
 use App\Models\Concerns\BelongsToOrganization;
 use Database\Factories\TicketFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\AsVector;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -40,6 +42,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'ai_summary',
     'ai_sentiment',
 ])]
+#[Hidden(['embedding'])]
 class Ticket extends Model
 {
     /** @use HasFactory<TicketFactory> */
@@ -85,6 +88,7 @@ class Ticket extends Model
             'priority' => Priority::class,
             'channel' => TicketChannel::class,
             'ai_sentiment' => Sentiment::class,
+            'embedding' => AsVector::class,
             'first_response_due_at' => 'datetime',
             'resolution_due_at' => 'datetime',
             'first_responded_at' => 'datetime',

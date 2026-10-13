@@ -71,6 +71,15 @@ services:
     networks:
       - ticketing
 
+  ollama:
+    image: ollama/ollama:0.35.0
+    container_name: ticketing-ollama
+    restart: unless-stopped
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - ticketing
+
   nginx:
     image: nginx:1.27-alpine
     container_name: ticketing-nginx
@@ -130,3 +139,4 @@ networks:
 volumes:
   postgres-data:
   redis-data:
+  ollama-data:

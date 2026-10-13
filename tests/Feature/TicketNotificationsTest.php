@@ -20,6 +20,7 @@ class TicketNotificationsTest extends TestCase
         parent::setUp();
 
         $this->inOrganization();
+        $this->fakeEmbeddings();
         Notification::fake();
     }
 

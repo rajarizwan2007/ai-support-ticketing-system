@@ -4,6 +4,7 @@ namespace Tests;
 
 use App\Models\Organization;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\URL;
 use RuntimeException;
 
@@ -25,6 +26,37 @@ abstract class TestCase extends BaseTestCase
         if (! str_ends_with((string) $database, '_test')) {
             throw new RuntimeException("Refusing to run tests against non-test database [{$database}].");
         }
+    }
+
+    /**
+     * Tests never call real HTTP services (e.g. Ollama); fake them explicitly.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Http::preventStrayRequests();
+    }
+
+    /**
+     * Answer embedding requests to Ollama with the given vector.
+     *
+     * @param  list<float>  $values
+     */
+    protected function fakeEmbeddings(array $values = [1.0]): void
+    {
+        Http::fake(['*/api/embed' => Http::response(['embeddings' => [$this->vector($values)]])]);
+    }
+
+    /**
+     * A 1024-dimension vector starting with the given values, padded with zeros.
+     *
+     * @param  list<float>  $values
+     * @return list<float>
+     */
+    protected function vector(array $values): array
+    {
+        return array_pad($values, 1024, 0.0);
     }
 
     /**

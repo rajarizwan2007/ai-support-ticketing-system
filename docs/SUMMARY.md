@@ -11,7 +11,7 @@ A multi-tenant support ticketing app: organizations get their own subdomain, cus
 | Database | PostgreSQL 17 + pgvector | Embeddings live next to the data; no separate vector DB |
 | Cache / sessions / queue | Redis 7 | Fast; needed for queued AI jobs |
 | AI (planned) | Python FastAPI + Ollama (local models) | Learn Python; free, private AI; Claude optional behind the same interface |
-| Runtime | Docker Compose (app, queue, nginx, postgres, redis, mailpit) | Same setup everywhere; PHP never installed on the host |
+| Runtime | Docker Compose (app, queue, nginx, postgres, redis, mailpit, ollama) | Same setup everywhere; PHP never installed on the host |
 
 ## Features so far
 
@@ -21,6 +21,7 @@ A multi-tenant support ticketing app: organizations get their own subdomain, cus
 - **References** `TKT-1001`, `TKT-1002`, … per organization.
 - **SLA:** due dates set on create from the matching policy and recalculated when the priority changes; `first_responded_at`, `resolved_at`, `closed_at` recorded automatically.
 - **Email notifications** (queued): new ticket → staff; public reply → the customer or the assigned agent; assignment → the new assignee. Mailpit catches them in development.
+- **Similar tickets** (staff only): each ticket is embedded by a local model (Ollama, `qwen3-embedding:0.6b`) in a queued job; the ticket page lists the 5 closest tickets in the organization (pgvector, cosine, HNSW index). Free, and ticket text never leaves the server.
 - **Demo data:** two orgs, `acme` and `globex`, with users, tickets and KB articles.
 
 ## Data model
@@ -29,7 +30,7 @@ A multi-tenant support ticketing app: organizations get their own subdomain, cus
 
 ## AI features (planned, WBS weeks 4–6)
 
-None are built yet. The schema already has room for them.
+Similar tickets is built (see [ADR-002](adr/0002-ai-providers.md)); the rest are planned.
 
 **Architecture:** Laravel ↔ a **Python FastAPI service** ↔ a **local model (Ollama)** for chat and embeddings. Laravel calls the service from queued jobs; vectors are stored and searched in Postgres with pgvector.
 

@@ -3,6 +3,7 @@
 namespace App\Actions\Tickets;
 
 use App\Enums\Priority;
+use App\Jobs\EmbedTicket;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Notifications\TicketCreated;
@@ -17,6 +18,7 @@ class CreateTicket
      * Open a ticket for the requester, with the next reference and SLA due
      * dates from the organization's active policy for its priority, store
      * any attached files, and email the organization's staff (except the requester).
+     * The embedding for similar-ticket search is made in the background.
      *
      * @param  array{subject: string, description: string, category_id?: int|string|null, priority?: string}  $attributes
      * @param  array<int, UploadedFile>  $files
@@ -35,6 +37,7 @@ class CreateTicket
 
         $this->addAttachments->handle($ticket, $requester, $files);
 
+        EmbedTicket::dispatch($ticket);
         Notification::send(User::staff()->whereKeyNot($requester->id)->get(), new TicketCreated($ticket));
 
         return $ticket;

@@ -74,6 +74,36 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-13 — Similar tickets with local embeddings (ADR-002)
+
+### Done
+- **ADR-002 accepted:** free, self-hosted embeddings. Compared Voyage, OpenAI and Gemini (paid, or free tiers with catches) against local models; chose **Ollama + `qwen3-embedding:0.6b`** (1024 dims, 32K input).
+- **Docker:** `ollama` service (`ollama/ollama:0.35.0`, model stored in the `ollama-data` volume).
+- **Migration:** `tickets.embedding vector(1024)` with an HNSW cosine index, plus `tickets.embedding_model`.
+- **`EmbedTicket` job** posts subject + description to Ollama's `/api/embed` and stores the vector. Queued by `CreateTicket` and by the seeder.
+- **Ticket page:** "Similar tickets" (staff only): up to 5 tickets in the same organization with cosine similarity ≥ 0.5, closest first, via Laravel's `whereVectorSimilarTo()`. `embedding` is hidden from JSON.
+- **Seeder:** 20 realistic tickets in same-topic pairs (login, password reset, double charge, refund, CSV export, slow pages, ...) instead of Lorem ipsum, so the demo shows real matches.
+- **Tests:** new `SimilarTicketsTest` (4 tests: job queued, job stores vector, closest-first + other org excluded + embedding hidden, customers see none). `TestCase` now blocks stray HTTP (`Http::preventStrayRequests()`) and has `fakeEmbeddings()` / `vector()` helpers. Suite: 101 passing; Larastan clean.
+- **Checked by hand:** the real job ran in the queue (≈1 s per ticket on CPU) and stored a 1024-dim vector.
+
+### Decisions
+- **No paid services:** local model, so no key, no limits, and ticket text never leaves the server. Cost: ≈1 GB RAM and ≈4.5 GB disk.
+- **Laravel 13's built-in vector support** (`vector()` column, `vectorIndex()`, `AsVector` cast, `whereVectorSimilarTo()`): no extra package.
+- **No `Embedder` interface:** one provider, and `Http::fake()` covers tests. Add the interface only if a second provider appears.
+- **Staff only:** similar tickets can belong to other customers.
+- **Threshold 0.5:** measured on the seed tickets with the real model: same-topic pairs scored at least 0.59 (avg 0.73), other pairs avg 0.37, highest 0.61.
+
+### Problems & fixes
+- `ollama/ollama:latest` (5.5 GB) was already on this machine, and pulling a pinned older tag started a second multi-GB download on a nearly full disk. Its digest matched `0.35.0`, so the service is pinned to `0.35.0` and reuses the local layers.
+- The attachments work (`TicketAttachmentsTest`), committed in parallel, creates tickets too, so it failed once stray HTTP was blocked. Fixed with `$this->fakeEmbeddings()` in its `setUp()`.
+
+### Next
+- [ ] Re-embed when a ticket's subject or description changes (no edit flow yet)
+- [ ] KB article suggestions (same approach, `kb_articles.embedding`)
+- [ ] Business-hours SLA
+
+---
+
 ## 2026-10-13 — Queue worker and email notifications
 
 ### Done

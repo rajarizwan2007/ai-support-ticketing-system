@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\Priority;
+use App\Jobs\EmbedTicket;
 use App\Models\Category;
 use App\Models\KbArticle;
 use App\Models\Message;
@@ -14,6 +15,34 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
+    /**
+     * Sample tickets in pairs on the same topic, so similar-ticket search has matches.
+     *
+     * @var list<array{0: string, 1: string}>
+     */
+    private const SAMPLE_TICKETS = [
+        ['Cannot log in to my account', 'I enter my email and password but the login page just reloads. I tried two browsers.'],
+        ['Login keeps failing after password change', 'Since I changed my password yesterday I get "invalid credentials" every time I sign in.'],
+        ['Password reset email never arrives', 'I requested a password reset three times but no email came, not even in spam.'],
+        ['No reset link in my inbox', 'The forgot password form says an email was sent, but nothing arrives.'],
+        ['Charged twice this month', 'My card shows two charges for the same monthly subscription. Please refund one.'],
+        ['Duplicate payment on my invoice', 'I was billed twice for October. Can you check and reverse the extra payment?'],
+        ['Request a refund for annual plan', 'We switched to monthly by mistake after paying for a year. I would like a refund.'],
+        ['How do I get my money back?', 'I cancelled within the trial period but was still charged. How can I get a refund?'],
+        ['Export to CSV is empty', 'When I export my reports to CSV the file downloads but has only the header row.'],
+        ['CSV download contains no data', 'The exported spreadsheet is blank apart from the column names.'],
+        ['Dashboard is very slow', 'The dashboard takes over 30 seconds to load since this morning.'],
+        ['Pages take forever to load', 'Every page in the app is extremely slow today, sometimes it times out.'],
+        ['Add a new user to our team', 'How can I invite a colleague to our organization account?'],
+        ['Invite a teammate', 'I want to give my coworker access. Where do I send an invitation?'],
+        ['Change the email on my account', 'I have a new work email address. How do I update it on my profile?'],
+        ['Update my contact email', 'Please change my account email to my new address.'],
+        ['Mobile app crashes on startup', 'The iPhone app closes immediately after the splash screen.'],
+        ['App closes as soon as I open it', 'On Android the app crashes right away since the last update.'],
+        ['Notifications not received', 'I stopped getting email notifications when someone replies to my tickets.'],
+        ['Not getting reply emails', 'Agents reply to my tickets but I never receive the email alerts.'],
+    ];
+
     /**
      * Seed the roles and two demo organizations, so tenant isolation can be
      * checked by hand (acme.localhost and globex.localhost).
@@ -71,13 +100,16 @@ class DatabaseSeeder extends Seeder
             Category::factory()->for($organization)->create(['name' => 'Account', 'slug' => 'account']),
         ]);
 
-        foreach (range(1, 20) as $number) {
+        foreach (self::SAMPLE_TICKETS as $index => [$subject, $description]) {
+            $number = $index + 1;
             $priority = fake()->randomElement(Priority::cases());
             $sla = $slaPolicies[$priority->value];
             $createdAt = now()->subHours(fake()->numberBetween(1, 72));
 
             $ticket = Ticket::factory()->for($organization)->create([
                 'reference' => 'TKT-'.(1000 + $number),
+                'subject' => $subject,
+                'description' => $description,
                 'requester_id' => $customers->random()->id,
                 'assignee_id' => fake()->boolean(70) ? $agents->random()->id : null,
                 'category_id' => $categories->random()->id,
@@ -87,6 +119,8 @@ class DatabaseSeeder extends Seeder
                 'resolution_due_at' => $createdAt->copy()->addMinutes($sla->resolution_minutes),
                 'created_at' => $createdAt,
             ]);
+
+            EmbedTicket::dispatch($ticket);
 
             Message::factory()->for($ticket)->create(['user_id' => $ticket->requester_id]);
 
