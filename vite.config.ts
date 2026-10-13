@@ -25,8 +25,10 @@ export default defineConfig({
         }),
         tailwindcss(),
         wayfinder({
-            // PHP runs in Docker, not on the host.
-            command: 'docker compose exec -T app php artisan wayfinder:generate',
+            // PHP runs in Docker, not on the host. CI runs PHP directly and sets WAYFINDER_COMMAND.
+            command:
+                process.env.WAYFINDER_COMMAND ??
+                'docker compose exec -T app php artisan wayfinder:generate',
             formVariants: true,
         }),
     ]),

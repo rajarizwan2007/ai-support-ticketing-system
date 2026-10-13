@@ -1,6 +1,8 @@
 # AI Support Ticketing System
 
-A multi-tenant support ticketing app (Laravel 13, Inertia + React). Work in progress; AI features (embeddings, similar tickets, reply suggestions) are planned.
+[![CI](https://github.com/rajarizwan2007/ai-support-ticketing-system/actions/workflows/ci.yml/badge.svg)](https://github.com/rajarizwan2007/ai-support-ticketing-system/actions/workflows/ci.yml)
+
+A multi-tenant support ticketing app (Laravel 13, Inertia + React). Work in progress; AI features (auto-triage, RAG suggested replies via a Python service with a local model) are planned.
 
 ## Stack
 
@@ -33,6 +35,8 @@ docker compose exec app php artisan test   # tests (ticketing_test database)
 docker compose exec app composer lint      # Pint
 docker compose exec app composer analyse   # Larastan, level 7
 ```
+
+GitHub Actions runs Pint, Larastan, the frontend build, the type-check and the tests on every push to `main` and on pull requests (`.github/workflows/ci.yml`).
 
 ## Docs
 

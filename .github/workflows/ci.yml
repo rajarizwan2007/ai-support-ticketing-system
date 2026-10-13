@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_DB: ticketing_test
+          POSTGRES_USER: ticketing
+          POSTGRES_PASSWORD: secret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ticketing"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_USERNAME: ticketing
+      DB_PASSWORD: secret
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_pgsql, pgsql, intl, bcmath, zip, mbstring, redis
+          coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: |
+          composer install --no-interaction --prefer-dist --no-progress
+          npm ci
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Pint
+        run: vendor/bin/pint --test
+
+      - name: Larastan
+        run: composer analyse
+
+      - name: Build frontend
+        run: npm run build
+        env:
+          WAYFINDER_COMMAND: php artisan wayfinder:generate
+
+      - name: Type-check
+        run: npm run types:check
+
+      - name: Tests
+        run: php artisan test
