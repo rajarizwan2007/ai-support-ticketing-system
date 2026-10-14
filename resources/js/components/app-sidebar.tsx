@@ -1,5 +1,5 @@
-import { Link } from '@inertiajs/react';
-import { LayoutGrid, Ticket } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { BookOpen, LayoutGrid, Ticket } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -13,6 +13,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as kb } from '@/routes/kb';
 import { index as tickets } from '@/routes/tickets';
 import type { NavItem } from '@/types';
 
@@ -29,7 +30,17 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
+const staffNavItems: NavItem[] = [
+    {
+        title: 'Knowledge base',
+        href: kb(),
+        icon: BookOpen,
+    },
+];
+
 export function AppSidebar() {
+    const { auth } = usePage().props;
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -45,7 +56,13 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain
+                    items={
+                        auth.isStaff
+                            ? [...mainNavItems, ...staffNavItems]
+                            : mainNavItems
+                    }
+                />
             </SidebarContent>
 
             <SidebarFooter>

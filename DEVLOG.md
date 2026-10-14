@@ -5,6 +5,32 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-14 — Knowledge base articles (WBS 1.5.1.2)
+
+### Done
+
+- **`KbArticleController`** (resource routes `kb.*`, no `show`: the edit page is the article page): list (20 per page, title search), create, edit, delete. Validation: title, body, category, status.
+- **`KbArticlePolicy`:** admins and agents only; customers get 403.
+- **Slug** made from the title on create, with `-2`, `-3`, … if the organization already uses it; never changed afterwards, so links keep working.
+- **`published_at`** stamped the first time an article is published (model hook), cleared when it goes back to draft; archived keeps it.
+- `author_id` and `slug` removed from `$fillable`: the controller sets them, never the request.
+- **Frontend:** `kb/index` and one `kb/form` page for create and edit (delete with a confirm). "Knowledge base" in the sidebar for staff only (new shared prop `auth.isStaff`).
+- **Tests:** new `KbArticlesTest` (8: list + search, unique slug + author, publish date stamped once and cleared on draft, slug kept on rename, delete, validation, customer 403 on every route, other organization's article 404). Suite: 146 passing; Larastan clean.
+- **Checked by hand** through nginx: agent sees 6 articles, creates one (slug `reset-your-password`, published date set), deletes it; customer gets 403.
+- WBS 1.5.1.2 marked done.
+
+### Decisions
+
+- **Staff only for now:** a customer-facing help center isn't in the WBS; the articles are input for RAG replies.
+- **Plain-text body** (textarea, no rich-text editor): simplest, and what the embedding and the chat model read anyway.
+
+### Next
+
+- [ ] 1.5.1.3: embed KB articles through the Python `/embed` (queued job), and move ticket embeddings to it too
+- [ ] Learning task 1.5.1.1 (yours)
+
+---
+
 ## 2026-10-14 — Local chat model (WBS 1.4.4, ADR-003)
 
 ### Done

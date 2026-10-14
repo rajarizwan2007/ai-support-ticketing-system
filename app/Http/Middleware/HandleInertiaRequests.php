@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Organization;
+use App\Models\Role;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -42,6 +43,7 @@ class HandleInertiaRequests extends Middleware
             'organization' => Organization::current()?->only('name', 'slug'),
             'auth' => [
                 'user' => $request->user(),
+                'isStaff' => $request->user() !== null && ! $request->user()->hasRole(Role::CUSTOMER),
             ],
             'notifications' => fn () => $request->user() ? [
                 'unreadCount' => $request->user()->unreadNotifications()->count(),

@@ -10,11 +10,29 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['category_id', 'author_id', 'title', 'slug', 'body', 'status', 'published_at'])]
+/**
+ * @property KbArticleStatus $status
+ */
+#[Fillable(['category_id', 'title', 'body', 'status'])]
 class KbArticle extends Model
 {
     /** @use HasFactory<KbArticleFactory> */
     use BelongsToOrganization, HasFactory;
+
+    /**
+     * Stamp published_at the first time the article is published; clear it when
+     * the article goes back to draft. Archived articles keep their date.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (KbArticle $article): void {
+            if ($article->status === KbArticleStatus::Published) {
+                $article->published_at ??= now();
+            } elseif ($article->status === KbArticleStatus::Draft) {
+                $article->published_at = null;
+            }
+        });
+    }
 
     /**
      * Get the attributes that should be cast.
