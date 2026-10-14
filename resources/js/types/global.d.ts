@@ -1,5 +1,7 @@
 import type { Auth } from '@/types/auth';
 import type { NotificationsSummary } from '@/types/notifications';
+import type { ReplySuggestion } from '@/types/tickets';
+import type { FlashToast } from '@/types/ui';
 
 declare module 'react' {
     interface InputHTMLAttributes<T> {
@@ -16,6 +18,10 @@ declare module '@inertiajs/core' {
             notifications: NotificationsSummary | null;
             sidebarOpen: boolean;
             [key: string]: unknown;
+        };
+        flashDataType: {
+            toast?: FlashToast;
+            suggestion?: ReplySuggestion;
         };
     }
 }

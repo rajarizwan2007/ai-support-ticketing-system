@@ -52,6 +52,7 @@ export type Message = {
     user_id: number | null;
     type: MessageType;
     body: string;
+    is_ai_generated: boolean;
     created_at: string;
     author?: UserSummary | null;
     attachments?: Attachment[];
@@ -66,4 +67,9 @@ export type Attachment = {
     mime_type: string;
     size: number;
     created_at: string;
+};
+
+export type ReplySuggestion = {
+    body: string;
+    sources: { id: number; title: string }[];
 };

@@ -15,6 +15,7 @@ Route::middleware('auth')->group(function () {
     Route::get('tickets/{ticket:reference}', [TicketController::class, 'show'])->name('tickets.show');
     Route::patch('tickets/{ticket:reference}', [TicketController::class, 'update'])->name('tickets.update');
     Route::post('tickets/{ticket:reference}/messages', [TicketController::class, 'reply'])->name('tickets.reply');
+    Route::post('tickets/{ticket:reference}/suggest-reply', [TicketController::class, 'suggestReply'])->name('tickets.suggest-reply')->middleware('throttle:10,1');
     Route::get('tickets/{ticket:reference}/attachments/{attachment}', [TicketController::class, 'attachment'])->name('tickets.attachments.show')->scopeBindings();
     Route::resource('kb', KbArticleController::class)->except('show')->parameters(['kb' => 'article']);
     Route::post('notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');

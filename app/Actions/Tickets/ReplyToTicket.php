@@ -20,14 +20,17 @@ class ReplyToTicket
      * staff response time. A customer reply reopens a ticket that is pending,
      * resolved or closed. A listener emails the other side of a public reply.
      *
+     * $isAiGenerated marks a message an agent started from an AI draft.
+     *
      * @param  array<int, UploadedFile>  $files
      */
-    public function handle(Ticket $ticket, User $user, string $body, bool $isInternal = false, array $files = []): Message
+    public function handle(Ticket $ticket, User $user, string $body, bool $isInternal = false, array $files = [], bool $isAiGenerated = false): Message
     {
         $message = $ticket->messages()->create([
             'user_id' => $user->id,
             'type' => $isInternal ? MessageType::InternalNote : MessageType::Reply,
             'body' => $body,
+            'is_ai_generated' => $isAiGenerated,
         ]);
 
         $this->addAttachments->handle($ticket, $user, $files, $message);

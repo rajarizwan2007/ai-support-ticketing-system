@@ -43,6 +43,7 @@ GitHub Actions runs Pint, Larastan, the frontend build, the type-check, frontend
 
 ## Docs
 
+- [Project guide (how everything works, interview prep)](docs/PROJECT-GUIDE.md)
 - [Project summary](docs/SUMMARY.md)
 - [ERD](docs/erd.md)
 - API docs (Scribe): http://localhost:8088/docs/ — regenerate with `docker compose exec app php artisan scribe:generate`

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\Tickets\CreateTicket;
 use App\Actions\Tickets\ReplyToTicket;
+use App\Actions\Tickets\SuggestReply;
 use App\Actions\Tickets\UpdateTicket;
 use App\Enums\MessageType;
 use App\Enums\Priority;
@@ -13,6 +14,8 @@ use App\Models\Category;
 use App\Models\Role;
 use App\Models\Ticket;
 use App\Models\User;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -111,14 +114,34 @@ class TicketController extends Controller
         $validated = $request->validate([
             'body' => ['required', 'string', 'max:10000'],
             'internal' => ['boolean'],
+            'ai_generated' => ['boolean'],
             ...$this->attachmentRules(),
         ]);
 
-        $isInternal = $request->boolean('internal') && $request->user()->can('update', $ticket);
+        $isStaff = $request->user()->can('update', $ticket);
+        $isInternal = $request->boolean('internal') && $isStaff;
+        $isAiGenerated = $request->boolean('ai_generated') && $isStaff;
 
-        $replyToTicket->handle($ticket, $request->user(), $validated['body'], $isInternal, $request->file('attachments', []));
+        $replyToTicket->handle($ticket, $request->user(), $validated['body'], $isInternal, $request->file('attachments', []), $isAiGenerated);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => $isInternal ? __('Internal note added.') : __('Reply sent.')]);
+
+        return back();
+    }
+
+    /**
+     * Draft a reply from the KB with the AI service and hand it to the page
+     * as flash data; nothing is saved until the agent sends it.
+     */
+    public function suggestReply(Ticket $ticket, SuggestReply $suggestReply): RedirectResponse
+    {
+        Gate::authorize('update', $ticket);
+
+        try {
+            Inertia::flash('suggestion', $suggestReply->handle($ticket));
+        } catch (ConnectionException|RequestException) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => __('The AI assistant is not available right now. Try again in a moment.')]);
+        }
 
         return back();
     }

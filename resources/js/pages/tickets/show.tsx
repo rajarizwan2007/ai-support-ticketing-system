@@ -1,4 +1,4 @@
-import { Form, Head, Link, router } from '@inertiajs/react';
+import { Form, Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import AttachmentInput from '@/components/attachment-input';
 import AttachmentList from '@/components/attachment-list';
@@ -6,7 +6,8 @@ import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import { index, reply, show, update } from '@/routes/tickets';
+import { edit as editArticle } from '@/routes/kb';
+import { index, reply, show, suggestReply, update } from '@/routes/tickets';
 import type {
     Attachment,
     Message,
@@ -37,6 +38,8 @@ export default function TicketsShow({
     staff,
     similarTickets,
 }: Props) {
+    const suggestion = usePage().flash.suggestion;
+
     return (
         <>
             <Head title={ticket.reference} />
@@ -185,6 +188,9 @@ export default function TicketsShow({
                                 {message.author?.name ?? 'System'}
                                 {message.type === 'internal_note' &&
                                     ' · internal note'}
+                                {canUpdate &&
+                                    message.is_ai_generated &&
+                                    ' · from AI draft'}
                                 {' · '}
                                 {new Date(message.created_at).toLocaleString()}
                             </p>
@@ -199,6 +205,26 @@ export default function TicketsShow({
                     ))}
                 </div>
 
+                {canUpdate && (
+                    <Form
+                        {...suggestReply.form(ticket.reference)}
+                        options={{ preserveScroll: true }}
+                    >
+                        {({ processing }) => (
+                            <Button
+                                type="submit"
+                                variant="secondary"
+                                disabled={processing}
+                            >
+                                {processing && <Spinner />}
+                                {processing
+                                    ? 'Drafting a reply…'
+                                    : 'Suggest reply'}
+                            </Button>
+                        )}
+                    </Form>
+                )}
+
                 <Form
                     {...reply.form(ticket.reference)}
                     resetOnSuccess
@@ -208,13 +234,47 @@ export default function TicketsShow({
                     {({ processing, errors }) => (
                         <>
                             <textarea
+                                key={suggestion?.body}
                                 name="body"
-                                rows={4}
+                                rows={suggestion ? 8 : 4}
                                 required
+                                defaultValue={suggestion?.body}
                                 aria-label="Reply"
                                 placeholder="Write a reply…"
                                 className="rounded-md border bg-background p-2 text-sm"
                             />
+                            {suggestion && (
+                                <div className="text-sm text-muted-foreground">
+                                    <input
+                                        type="hidden"
+                                        name="ai_generated"
+                                        value="1"
+                                    />
+                                    AI draft: check and edit it before sending.{' '}
+                                    {suggestion.sources.length > 0 ? (
+                                        <>
+                                            Based on:{' '}
+                                            {suggestion.sources.map(
+                                                (source, i) => (
+                                                    <span key={source.id}>
+                                                        {i > 0 && ', '}
+                                                        <Link
+                                                            href={editArticle(
+                                                                source.id,
+                                                            )}
+                                                            className="underline"
+                                                        >
+                                                            {source.title}
+                                                        </Link>
+                                                    </span>
+                                                ),
+                                            )}
+                                        </>
+                                    ) : (
+                                        'No matching KB article found.'
+                                    )}
+                                </div>
+                            )}
                             <InputError message={errors.body} />
                             <AttachmentInput errors={errors} />
                             <div className="flex items-center gap-4">

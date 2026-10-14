@@ -5,6 +5,39 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-14 — RAG suggested replies (WBS 1.5.2)
+
+### Done
+
+- **Python `POST /suggest-reply`:** takes the ticket (subject, description) and up to 5 KB articles; returns `reply`, `source_ids`, `model`, `prompt` (`suggest_reply_v1`). Prompts live in `app/prompts.py`; articles cut to 2,000 characters; ticket and articles wrapped in `<ticket>` / `<article>` tags and declared as data, not instructions. 503 if the model is down, 502 if it returns nothing.
+- **Laravel `SuggestReply` action:** up to 3 published KB articles of the organization with cosine similarity ≥ 0.5 to the ticket's embedding (`whereVectorSimilarTo`), sent to the service; timeout 55 s (under nginx's 60 s).
+- **Route** `POST tickets/{reference}/suggest-reply`: staff only, 10 per minute per user. The draft comes back as Inertia flash data (nothing saved); if the service is down, an error toast.
+- **Ticket page:** "Suggest reply" button (spinner while drafting) → the reply box is filled with the draft, with "AI draft: check and edit it before sending" and links to the source articles. Sending marks the message `is_ai_generated` (staff only; shown to staff as "from AI draft").
+- **Tests:** pytest 25 (prompt contents, both instructions, article cut, reply clean-up, validation, 502/503); new `SuggestReplyTest` (6: closest published same-org articles only, no embedding → no articles, service down → error toast, customer 403, 429 after 10, AI flag only for staff). Suite: 154 passing; Larastan clean.
+- **Checked by hand:** added 3 real KB articles; a customer ticket "Charged twice this month" → similarity 0.77 to "Duplicate charges", ≤ 0.35 to the rest; the draft (≈4 s) explained the refund from that article and cited it.
+- WBS 1.5.2.1 and 1.5.2.2 marked done.
+
+### Decisions
+
+- **Sources = the articles Laravel retrieved,** not the model's own citations: in testing, `gemma3:1b` returned an empty `source_ids` every time. Retrieval (similarity ≥ 0.5) decides relevance, so the sources shown are exactly what the model was given.
+- **"Answer from the articles" vs "say we're checking" is chosen in code** (articles found or not), as the last line of the prompt. When the prompt offered both, the 1B model picked "checking" even when an article answered the ticket.
+- **Plain-text output + clean-up** (`clean_reply`: drops an intro line ending in ":", wrapping quotes, echoed tags) instead of JSON, since there is nothing else to return.
+- **Synchronous request, not a queued job:** a draft takes ~3–10 s on CPU, so a spinner is simpler than a job plus polling. Rate-limited because each draft costs several seconds of CPU.
+- **Whole articles, no chunking:** articles are short; the first 2,000 characters are used. Chunking can come if long articles appear.
+- **Human in the loop:** the draft is never sent automatically. A 1B model can still blur details (one test draft said refunds were automatic, while the article says an agent confirms first), so the agent must review it.
+
+### Problems & fixes
+
+- First prompt: model ignored the article and asked for details → moved the choice into code (see Decisions).
+- Model wrapped replies in "Okay, here's a reply:" and quotes, and echoed `<article>` tags → told it to write only the message, plus `clean_reply`.
+- `Http::fake` records the raw request data, so a Collection in the payload broke `array_column` in a test → send `->all()`.
+
+### Next
+
+- [ ] 1.5.3: auto-triage (Python `/triage`, queued job on `TicketCreated`, low confidence → manual review)
+
+---
+
 ## 2026-10-14 — Embeddings through the Python service (WBS 1.5.1.3)
 
 ### Done

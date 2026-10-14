@@ -6,6 +6,7 @@ import httpx
 from fastapi import Depends, FastAPI, HTTPException, Request
 from pydantic import BaseModel, Field
 
+from app import prompts
 from app.config import settings
 from app.ollama import Ollama, OllamaError
 
@@ -61,3 +62,47 @@ async def embed(body: EmbedRequest, ollama: OllamaDep) -> EmbedResponse:
     except OllamaError as error:
         raise HTTPException(status_code=503, detail="Embedding model unavailable") from error
     return EmbedResponse(model=ollama.embedding_model, embeddings=embeddings)
+
+
+class Article(BaseModel):
+    id: int
+    title: Annotated[str, Field(min_length=1)]
+    body: Annotated[str, Field(min_length=1)]
+
+
+class SuggestReplyRequest(BaseModel):
+    subject: Annotated[str, Field(min_length=1)]
+    description: Annotated[str, Field(min_length=1)]
+    articles: list[Article] = Field(default=[], max_length=5)
+
+
+class SuggestReplyResponse(BaseModel):
+    reply: str
+    source_ids: list[int]
+    model: str
+    prompt: str
+
+
+@app.post("/suggest-reply")
+async def suggest_reply(body: SuggestReplyRequest, ollama: OllamaDep) -> SuggestReplyResponse:
+    """A draft reply grounded in the given KB articles. The caller picks the articles
+    (by similarity), so they are the sources; a 1B model can't cite reliably itself.
+    An agent reviews and edits the draft before anything is sent."""
+    user = prompts.suggest_reply_user(
+        body.subject, body.description, [(a.id, a.title, a.body) for a in body.articles]
+    )
+    try:
+        content = await ollama.chat(prompts.SUGGEST_REPLY_SYSTEM, user)
+    except OllamaError as error:
+        raise HTTPException(status_code=503, detail="Chat model unavailable") from error
+
+    reply = prompts.clean_reply(content)
+    if not reply:
+        raise HTTPException(status_code=502, detail="Chat model returned an empty reply")
+
+    return SuggestReplyResponse(
+        reply=reply,
+        source_ids=[article.id for article in body.articles],
+        model=ollama.chat_model,
+        prompt=prompts.SUGGEST_REPLY_VERSION,
+    )
