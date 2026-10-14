@@ -6,6 +6,8 @@ use App\Enums\KbArticleStatus;
 use App\Models\Concerns\BelongsToOrganization;
 use Database\Factories\KbArticleFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Casts\AsVector;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property KbArticleStatus $status
  */
 #[Fillable(['category_id', 'title', 'body', 'status'])]
+#[Hidden(['embedding'])]
 class KbArticle extends Model
 {
     /** @use HasFactory<KbArticleFactory> */
@@ -45,7 +48,16 @@ class KbArticle extends Model
             'status' => KbArticleStatus::class,
             'published_at' => 'datetime',
             'view_count' => 'integer',
+            'embedding' => AsVector::class,
         ];
+    }
+
+    /**
+     * The text that is embedded to find this article for suggested replies.
+     */
+    public function embeddingText(): string
+    {
+        return $this->title."\n\n".$this->body;
     }
 
     /**

@@ -29,7 +29,7 @@ abstract class TestCase extends BaseTestCase
     }
 
     /**
-     * Tests never call real HTTP services (e.g. Ollama); fake them explicitly.
+     * Tests never call real HTTP services (e.g. the AI service); fake them explicitly.
      */
     protected function setUp(): void
     {
@@ -39,13 +39,13 @@ abstract class TestCase extends BaseTestCase
     }
 
     /**
-     * Answer embedding requests to Ollama with the given vector.
+     * Answer embedding requests to the Python AI service with the given vector.
      *
      * @param  list<float>  $values
      */
     protected function fakeEmbeddings(array $values = [1.0]): void
     {
-        Http::fake(['*/api/embed' => Http::response(['embeddings' => [$this->vector($values)]])]);
+        Http::fake(['*/embed' => Http::response(['model' => 'qwen3-embedding:0.6b', 'embeddings' => [$this->vector($values)]])]);
     }
 
     /**

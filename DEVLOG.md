@@ -5,6 +5,35 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-14 — Embeddings through the Python service (WBS 1.5.1.3)
+
+### Done
+
+- **Migration:** `kb_articles.embedding vector(1024)` + `embedding_model`, HNSW cosine index (same as tickets). ERD updated.
+- **One job for both:** `EmbedModel` (replaces `EmbedTicket`) takes a ticket or KB article, sends `embeddingText()` (subject + description / title + body) to the Python `POST /embed`, and stores the vector and the model name the service reports. Saved quietly and without touching `updated_at`.
+- **When:** ticket created (listener, as before); KB article created, or its title or body changed (status-only edits don't re-embed). The seeder embeds its KB articles too.
+- **Laravel no longer calls Ollama:** `services.ollama` config and `OLLAMA_URL` removed; the `.env` model names are only read by the `ai` container.
+- **Tests:** `fakeEmbeddings()` now fakes the AI service's response; 2 new KB tests (queued on create and reword, not on status change; vector stored without changing `updated_at`). Suite: 148 passing; Larastan clean.
+- **Checked by hand:** restarted Horizon, queued the 12 existing KB articles, created TKT-1023 through the API → all 13 embedded by `qwen3-embedding:0.6b` via the `ai` service (13 `POST /embed` in its log), 0 failed jobs.
+- WBS 1.5.1.3 marked done.
+
+### Decisions
+
+- **All model calls go through Python:** one place for timeouts, retries, model choice and (later) prompts; Laravel only knows `AI_SERVICE_URL`.
+- **The service names the model** in its response, so `embedding_model` records what was actually used, not what Laravel thinks is configured.
+- **Job timeout 130 s** > the service's 120 s Ollama timeout, so a slow model returns the service's 503 (retried) instead of a cut connection.
+
+### Problems & fixes
+
+- Adding `embeddingText()` above the `slaBreached` scope split it from its docblock → Larastan error; moved the method.
+
+### Next
+
+- [ ] 1.5.2.1: pgvector query for the top KB articles for a ticket
+- [ ] 1.5.2.2: Python `/suggest-reply` (draft + sources)
+
+---
+
 ## 2026-10-14 — Knowledge base articles (WBS 1.5.1.2)
 
 ### Done

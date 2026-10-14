@@ -127,6 +127,14 @@ class Ticket extends Model
     }
 
     /**
+     * The text that is embedded for similarity search.
+     */
+    public function embeddingText(): string
+    {
+        return $this->subject."\n\n".$this->description;
+    }
+
+    /**
      * Open tickets past the target's deadline that have not met it and have
      * not been escalated for it yet.
      *

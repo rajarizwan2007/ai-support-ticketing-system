@@ -149,7 +149,8 @@ erDiagram
         string status "draft, published, archived"
         timestamp published_at
         int view_count
-        vector embedding "pgvector, for article suggestions"
+        vector embedding "vector(1024), for suggested replies (RAG)"
+        string embedding_model "nullable"
         timestamp created_at
         timestamp updated_at
     }
@@ -178,7 +179,7 @@ erDiagram
 - **Customers are users too.** They have the Customer role, so requesters and agents share one table, and messages always point to `users`.
 - **SLA deadlines are stored on the ticket** (`first_response_due_at`, `resolution_due_at`). They're calculated once from the policy when the ticket is created, so later policy changes don't silently move existing deadlines, and breach checks are simple date comparisons.
 - **Status, priority, channel and similar fields are strings** backed by PHP enums. That's easier to change than Postgres enum types.
-- **`embedding` columns use pgvector** (not created yet: added in a later migration once the embedding model, and so the vector size, is chosen). The size (e.g. `vector(1024)`) depends on the embedding model. These columns power similar-ticket search and "suggested KB articles".
+- **`embedding` columns use pgvector:** `vector(1024)` (size fixed by `qwen3-embedding:0.6b`, ADR-002) with an HNSW cosine index, plus `embedding_model` so stale vectors can be found after a model change. Filled by the queued `EmbedModel` job through the Python AI service; they power similar-ticket search and the KB lookup for suggested replies.
 - **Tickets are soft-deleted** (`deleted_at`), so history and SLA reporting survive deletion.
 - **`messages.type = internal_note`** keeps agent-only notes in the same thread. They're filtered out of what customers see.
 - **Attachments always have a `ticket_id`, plus an optional `message_id`** (not polymorphic). Access is always "can you view this ticket?", and files on internal notes are hidden from customers like the notes. Files live on the private disk and are only served through a download route.

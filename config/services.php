@@ -14,11 +14,6 @@ return [
     |
     */
 
-    'ollama' => [
-        'url' => env('OLLAMA_URL', 'http://ollama:11434'),
-        'embedding_model' => env('OLLAMA_EMBEDDING_MODEL', 'qwen3-embedding:0.6b'),
-    ],
-
     'ai' => [
         'url' => env('AI_SERVICE_URL', 'http://ai:8000'),
     ],

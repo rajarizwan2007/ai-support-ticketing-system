@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\KbArticleStatus;
+use App\Jobs\EmbedModel;
 use App\Models\Category;
 use App\Models\KbArticle;
 use Illuminate\Http\RedirectResponse;
@@ -47,6 +48,8 @@ class KbArticleController extends Controller
         $article->author_id = $request->user()->id;
         $article->save();
 
+        EmbedModel::dispatch($article);
+
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Article created.')]);
 
         return to_route('kb.edit', $article);
@@ -67,6 +70,10 @@ class KbArticleController extends Controller
         Gate::authorize('update', $article);
 
         $article->update($request->validate($this->rules()));
+
+        if ($article->wasChanged(['title', 'body'])) {
+            EmbedModel::dispatch($article);
+        }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Article saved.')]);
 

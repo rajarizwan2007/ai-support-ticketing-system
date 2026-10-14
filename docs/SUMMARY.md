@@ -40,12 +40,12 @@ Similar tickets is built (see [ADR-002](adr/0002-ai-providers.md)); the rest are
 
 **Architecture:** Laravel ↔ a **Python FastAPI service** ↔ a **local model (Ollama)**: `qwen3-embedding:0.6b` for embeddings, `gemma3:1b` for chat ([ADR-003](adr/0003-chat-model.md): best of three small models on a 12-ticket triage test; priority suggestions were unreliable for all of them, so agents confirm them). Laravel calls the service from queued jobs; vectors are stored and searched in Postgres with pgvector.
 
-| Feature               | How                                                                                                                                                                                                                | Prepared in schema                                            |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
-| Embeddings            | **Built for tickets:** a queued Laravel job (`EmbedTicket`) calls Ollama directly and stores `tickets.embedding`. The Python service already has `/embed`; Laravel switches to it with the KB embeddings (week 5). | `tickets.embedding` (done), `kb_articles.embedding` (pending) |
-| RAG suggested replies | pgvector finds the top KB chunks; Python `/suggest-reply` returns a draft with its sources                                                                                                                         | `messages.is_ai_generated`, `kb_article_ticket` pivot         |
-| Auto-triage           | Python `/triage` returns category, priority, confidence (JSON); runs on ticket created                                                                                                                             | `category_id`, `priority`                                     |
-| Summary, sentiment    | Not in the WBS yet                                                                                                                                                                                                 | `tickets.ai_summary`, `tickets.ai_sentiment`                  |
+| Feature               | How                                                                                                                                                                                                                | Prepared in schema                                    |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------- |
+| Embeddings            | **Built:** a queued Laravel job (`EmbedModel`) sends the ticket or KB article text to the Python `/embed` and stores the vector and model name. Runs on ticket create and when an article's title or body changes. | `tickets.embedding`, `kb_articles.embedding` (done)   |
+| RAG suggested replies | pgvector finds the top KB chunks; Python `/suggest-reply` returns a draft with its sources                                                                                                                         | `messages.is_ai_generated`, `kb_article_ticket` pivot |
+| Auto-triage           | Python `/triage` returns category, priority, confidence (JSON); runs on ticket created                                                                                                                             | `category_id`, `priority`                             |
+| Summary, sentiment    | Not in the WBS yet                                                                                                                                                                                                 | `tickets.ai_summary`, `tickets.ai_sentiment`          |
 
 - **Human in the loop:** agents accept, edit or reject suggestions; low-confidence triage goes to manual review.
 - **Provider layer:** one interface, two providers: Ollama (default) and Claude (off). Versioned prompts, timeouts, retries, prompt-injection guard (ticket text treated as data).
@@ -82,7 +82,7 @@ Similar tickets is built (see [ADR-002](adr/0002-ai-providers.md)); the rest are
 
 ## Quality
 
-- **Tests:** PHPUnit, 146 passing; pytest (13) and ruff for the Python service. Tests never call real HTTP services (`Http::preventStrayRequests()`). Tenant isolation and role permissions are tested at two levels (model/policy and real HTTP requests).
+- **Tests:** PHPUnit, 148 passing; pytest (13) and ruff for the Python service. Tests never call real HTTP services (`Http::preventStrayRequests()`). Tenant isolation and role permissions are tested at two levels (model/policy and real HTTP requests).
 - **Test DB guard:** tests run on `ticketing_test`; `tests/TestCase.php` refuses any database not ending in `_test`.
 - **Static analysis:** Larastan level 7, no errors. **Style:** Pint.
 - **CI:** GitHub Actions runs Pint, Larastan, the frontend build, the type check, frontend lint + format (`vp check`) and the tests on every push; a second job runs ruff and pytest for the Python service.

@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\Priority;
-use App\Jobs\EmbedTicket;
+use App\Jobs\EmbedModel;
 use App\Models\Category;
 use App\Models\KbArticle;
 use App\Models\Message;
@@ -120,7 +120,7 @@ class DatabaseSeeder extends Seeder
                 'created_at' => $createdAt,
             ]);
 
-            EmbedTicket::dispatch($ticket);
+            EmbedModel::dispatch($ticket);
 
             Message::factory()->for($ticket)->create(['user_id' => $ticket->requester_id]);
 
@@ -133,6 +133,6 @@ class DatabaseSeeder extends Seeder
         KbArticle::factory()->published()->for($organization)->count(6)->create([
             'author_id' => fn () => $agents->random()->id,
             'category_id' => fn () => $categories->random()->id,
-        ]);
+        ])->each(fn (KbArticle $article) => EmbedModel::dispatch($article));
     }
 }
