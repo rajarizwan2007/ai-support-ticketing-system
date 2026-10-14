@@ -11,7 +11,8 @@ A multi-tenant support ticketing app: organizations get their own subdomain, cus
 | Database | PostgreSQL 17 + pgvector | Embeddings live next to the data; no separate vector DB |
 | Cache / sessions / queue | Redis 7 | Fast; needed for queued AI jobs |
 | AI (planned) | Python FastAPI + Ollama (local models) | Learn Python; free, private AI; Claude optional behind the same interface |
-| Runtime | Docker Compose (app, queue, scheduler, nginx, postgres, redis, mailpit, ollama) | Same setup everywhere; PHP never installed on the host |
+| Queue | Laravel Horizon on Redis | Dashboard for jobs, retries, failures, throughput |
+| Runtime | Docker Compose (app, queue (Horizon), scheduler, nginx, postgres, redis, mailpit, ollama) | Same setup everywhere; PHP never installed on the host |
 
 ## Features so far
 
@@ -68,6 +69,7 @@ Similar tickets is built (see [ADR-002](adr/0002-ai-providers.md)); the rest are
 | **API on the tenant subdomain** (`acme.…/api/v1`) | Same tenant resolution as the web app; users are tenant-scoped, so a token used on another organization's subdomain finds no user (401). Token-only (no session/cookie auth on the API). Versioned (`v1`) so it can change without breaking clients. |
 | **API Resources** (`TicketResource`, `MessageResource`) | One fixed JSON shape; internal ids, `organization_id` and the embedding never leave the server. |
 | **Status timestamps in a model hook** | Any status change (incl. future reopen) stamps them for free. |
+| **Horizon only for platform operators** | It shows every organization's jobs, so tenant admins can't open it; in production the gate allows only listed operator emails (none yet). |
 | **No permissions package** | Three roles don't need one. |
 | **Keep it simple** | Smallest code that works; complexity only where unavoidable. |
 
@@ -79,13 +81,12 @@ Similar tickets is built (see [ADR-002](adr/0002-ai-providers.md)); the rest are
 
 ## Quality
 
-- **Tests:** PHPUnit, 131 passing. Tests never call real HTTP services (`Http::preventStrayRequests()`). Tenant isolation and role permissions are tested at two levels (model/policy and real HTTP requests).
+- **Tests:** PHPUnit, 133 passing. Tests never call real HTTP services (`Http::preventStrayRequests()`). Tenant isolation and role permissions are tested at two levels (model/policy and real HTTP requests).
 - **Test DB guard:** tests run on `ticketing_test`; `tests/TestCase.php` refuses any database not ending in `_test`.
 - **Static analysis:** Larastan level 7, no errors. **Style:** Pint.
 - **CI:** GitHub Actions runs Pint, Larastan, the frontend build, the type check and the tests on every push.
 
 ## Next (from the WBS)
 
-- Week 3: Horizon
 - Week 4: Python + FastAPI + Ollama, then the AI features
 - Business-hours SLA (not in the WBS)

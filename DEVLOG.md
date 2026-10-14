@@ -5,6 +5,30 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-14 — Horizon (WBS 1.3.2.1)
+
+### Done
+- **`laravel/horizon`** installed (`horizon:install`: `HorizonServiceProvider`, `config/horizon.php`).
+- **`queue` container** now runs `php artisan horizon` instead of `queue:listen`. Dashboard: http://acme.localhost:8088/horizon (open to everyone only in `local`).
+- **Supervisor:** 3 tries; timeout 150 s (longer than `EmbedTicket`'s 120 s Ollama call). Redis `retry_after` raised from 90 to 180 s so a slow job is never handed to a second worker.
+- **`horizon:snapshot`** scheduled every 5 minutes for the dashboard's throughput and runtime graphs.
+- **Tests:** new `HorizonTest` (a tenant admin gets 403; worker timeout < retry window). Suite: 133 passing; Larastan clean.
+- **Checked by hand:** created TKT-1022 through the API → Horizon ran `SendNewTicketNotification` and `EmbedTicket`, 0 failed; dashboard 200.
+- WBS 1.3.2.1 marked done.
+
+### Decisions
+- **Only platform operators may open Horizon** (gate email list, empty for now), never tenant admins: it shows every organization's jobs and payloads.
+- **`horizon`, not `horizon:listen`:** the file-watching mode needs Node in the PHP container. After changing PHP code, run `docker compose exec queue php artisan horizon:terminate`; the container restarts it.
+
+### Problems & fixes
+- The old worker timeout (60 s) was shorter than `EmbedTicket`'s 120 s HTTP timeout, so a slow embedding could be killed mid-call → fixed with the new timeout and retry window.
+- Larastan flagged Horizon's published config (`env('APP_NAME')` may be bool) → cast to string.
+
+### Next
+- [ ] 1.3.5.3 catch-up, then week 4: Python + FastAPI
+
+---
+
 ## 2026-10-14 — Public REST API (WBS 1.3.4)
 
 ### Done

@@ -27,7 +27,7 @@ Demo logins (password `password`):
 | Acme | http://acme.localhost:8088 | admin@ / agent@ / customer@example.com |
 | Globex | http://globex.localhost:8088 | admin@ / agent@ / customer@globex.example.com |
 
-Emails are sent by the `queue` container and caught by Mailpit: http://localhost:8025 (restart it with `docker compose restart queue` after changing `.env`).
+Emails are sent by the `queue` container and caught by Mailpit: http://localhost:8025 (restart it with `docker compose restart queue` after changing `.env` or PHP code). The queue runs on Laravel Horizon: http://acme.localhost:8088/horizon (local only).
 
 ## Development
 

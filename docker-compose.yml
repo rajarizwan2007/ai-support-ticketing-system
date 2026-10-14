@@ -42,8 +42,9 @@ services:
     container_name: ticketing-queue
     restart: unless-stopped
     working_dir: /var/www/html
-    # queue:listen reloads the code for every job, so code changes apply without a restart.
-    command: ["php", "artisan", "queue:listen", "--tries=3"]
+    # Horizon runs the queue workers (dashboard at /horizon). Workers keep the code in memory:
+    # after changing PHP code, run `docker compose exec queue php artisan horizon:terminate` (the container restarts it).
+    command: ["php", "artisan", "horizon"]
     volumes:
       - ./:/var/www/html
       - ./docker/php/php.ini:/usr/local/etc/php/conf.d/zz-app.ini:ro
