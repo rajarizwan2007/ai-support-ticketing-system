@@ -5,6 +5,38 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-14 — Events and queued listeners (WBS 1.3.1.2, 1.3.2.2)
+
+### Done
+- **Events** (`app/Events`): `TicketCreated`, `TicketReplied`, `TicketStatusChanged`, `TicketAssigned`. Dispatched by `CreateTicket`, `ReplyToTicket` and `UpdateTicket` (status and assignment only when they really change; unassigning dispatches nothing).
+- **Listeners** (`app/Listeners`, auto-discovered):
+  - `SendNewTicketNotification` (queued): emails staff except the requester.
+  - `QueueTicketEmbedding` (sync): dispatches the `EmbedTicket` job.
+  - `SendReplyNotification` (queued): emails the other side of a public reply.
+  - `SendAssignmentNotification` (queued): emails the new assignee unless they assigned themselves.
+  - `TicketStatusChanged` has no listener yet; the bell and SLA work will add them.
+- **Notifications are no longer `ShouldQueue`:** the listener is the queued step.
+- **Tests:** new `TicketEventsTest` (4: wiring, dispatch from each action, nothing on no-op updates, email listener queued). `TicketNotificationsTest` unchanged and still green, so behaviour is the same. Suite: 107 passing; Larastan clean.
+- **Checked by hand:** a real ticket on acme → `SendNewTicketNotification` ran in the worker → 4 emails in Mailpit, only to acme staff (tenant context survives queued listeners), then `EmbedTicket` ran.
+- WBS: 1.3.1.2 and 1.3.2.2 done; also 1.2.4.2 and 1.2.5.3 (done earlier, WBS was behind).
+
+### Decisions
+- **Actions announce, listeners react:** adding the bell, SLA escalation or AI triage means a new listener, not another line in an action.
+- **Queue the listener, not the notification:** one hop on the queue instead of two.
+- **`QueueTicketEmbedding` is sync:** it only dispatches a job that already has its own retries; queueing it would add a second hop.
+- **`TicketAssigned` added** beyond the WBS's three events, because the assignment email already existed.
+
+### Problems & fixes
+- `Event::fake()` with no list also fakes Eloquent model events, so `BelongsToOrganization` never filled `organization_id` and the insert failed. → Fake only the ticket events.
+- `Event::assertListening()` only exists after `Event::fake()`.
+
+### Next
+- [ ] SLA breach command + escalation job (1.3.2.3)
+- [ ] Database notifications + bell (1.3.3), listening to these events
+- [ ] Horizon (1.3.2.1)
+
+---
+
 ## 2026-10-13 — File attachments
 
 ### Done

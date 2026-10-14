@@ -4,10 +4,10 @@ namespace App\Actions\Tickets;
 
 use App\Enums\MessageType;
 use App\Enums\TicketStatus;
+use App\Events\TicketReplied;
 use App\Models\Role;
 use App\Models\Ticket;
 use App\Models\User;
-use App\Notifications\TicketReplied;
 use Illuminate\Http\UploadedFile;
 
 class ReplyToTicket
@@ -17,8 +17,7 @@ class ReplyToTicket
     /**
      * Add a reply or internal note with any attached files, recording the first
      * staff response time. A customer reply reopens a ticket that is pending,
-     * resolved or closed. A public reply emails the other side: the customer,
-     * or the assigned agent.
+     * resolved or closed. A listener emails the other side of a public reply.
      *
      * @param  array<int, UploadedFile>  $files
      */
@@ -32,12 +31,9 @@ class ReplyToTicket
 
         $this->addAttachments->handle($ticket, $user, $files, $message);
 
-        $isCustomer = $user->hasRole(Role::CUSTOMER);
-        $recipient = $isCustomer ? $ticket->assignee : $ticket->requester;
+        TicketReplied::dispatch($ticket, $message);
 
-        if (! $isInternal && $recipient && $recipient->isNot($user)) {
-            $recipient->notify(new TicketReplied($ticket, $message));
-        }
+        $isCustomer = $user->hasRole(Role::CUSTOMER);
 
         if (! $isCustomer) {
             if (! $isInternal && ! $ticket->first_responded_at) {

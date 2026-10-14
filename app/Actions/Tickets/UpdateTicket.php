@@ -3,15 +3,16 @@
 namespace App\Actions\Tickets;
 
 use App\Enums\MessageType;
+use App\Events\TicketAssigned;
+use App\Events\TicketStatusChanged;
 use App\Models\Ticket;
 use App\Models\User;
-use App\Notifications\TicketAssigned;
 
 class UpdateTicket
 {
     /**
-     * Update the ticket, log each real change as a system message, and email
-     * a new assignee (unless they assigned it to themselves).
+     * Update the ticket, log each real change as a system message, and
+     * announce status changes and new assignments.
      *
      * @param  array{status?: string, priority?: string, assignee_id?: int|string|null}  $attributes
      */
@@ -31,10 +32,6 @@ class UpdateTicket
 
         if ($ticket->wasChanged('assignee_id')) {
             $changes[] = $ticket->assignee ? 'Assigned to '.$ticket->assignee->name : 'Unassigned';
-
-            if ($ticket->assignee?->isNot($user)) {
-                $ticket->assignee->notify(new TicketAssigned($ticket, $user));
-            }
         }
 
         foreach ($changes as $change) {
@@ -42,6 +39,14 @@ class UpdateTicket
                 'type' => MessageType::System,
                 'body' => $change.' by '.$user->name.'.',
             ]);
+        }
+
+        if ($ticket->wasChanged('status')) {
+            TicketStatusChanged::dispatch($ticket, $user);
+        }
+
+        if ($ticket->wasChanged('assignee_id') && $ticket->assignee) {
+            TicketAssigned::dispatch($ticket, $user);
         }
     }
 }

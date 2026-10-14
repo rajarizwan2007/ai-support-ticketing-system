@@ -22,7 +22,7 @@ A multi-tenant support ticketing app: organizations get their own subdomain, cus
 - **SLA:** due dates set on create from the matching policy and recalculated when the priority changes; `first_responded_at`, `resolved_at`, `closed_at` recorded automatically.
 - **File attachments** on tickets and replies (local storage; files on internal notes hidden from customers).
 - **Feedback in the UI:** success toasts after every ticket action, empty states, spinners and disabled controls while saving.
-- **Email notifications** (queued): new ticket → staff; public reply → the customer or the assigned agent; assignment → the new assignee. Mailpit catches them in development.
+- **Email notifications** (sent by queued event listeners): new ticket → staff; public reply → the customer or the assigned agent; assignment → the new assignee. Mailpit catches them in development.
 - **Similar tickets** (staff only): each ticket is embedded by a local model (Ollama, `qwen3-embedding:0.6b`) in a queued job; the ticket page lists the 5 closest tickets in the organization (pgvector, cosine, HNSW index). Free, and ticket text never leaves the server.
 - **Demo data:** two orgs, `acme` and `globex`, with users, tickets and KB articles.
 
@@ -62,6 +62,7 @@ Similar tickets is built (see [ADR-002](adr/0002-ai-providers.md)); the rest are
 | **Enums as strings + PHP enums** (not Postgres enums) | Easier to change. |
 | **Policies for one record, scopes for lists** | `TicketPolicy` decides access; `Ticket::visibleTo()` filters lists. |
 | **Action classes** (`CreateTicket`, `ReplyToTicket`, `UpdateTicket`) | Logic reusable from jobs, commands or an API; controllers only authorize, validate, respond. |
+| **Events + queued listeners** (`TicketCreated`, `TicketReplied`, `TicketStatusChanged`, `TicketAssigned`) | Actions announce what happened; listeners send emails and queue embeddings. New side effects (bell, SLA, triage) are a new listener, not an edit to the action. The request doesn't wait for SMTP. |
 | **Status timestamps in a model hook** | Any status change (incl. future reopen) stamps them for free. |
 | **No permissions package** | Three roles don't need one. |
 | **Keep it simple** | Smallest code that works; complexity only where unavoidable. |
@@ -74,13 +75,13 @@ Similar tickets is built (see [ADR-002](adr/0002-ai-providers.md)); the rest are
 
 ## Quality
 
-- **Tests:** PHPUnit, 103 passing. Tests never call real HTTP services (`Http::preventStrayRequests()`). Tenant isolation and role permissions are tested at two levels (model/policy and real HTTP requests).
+- **Tests:** PHPUnit, 107 passing. Tests never call real HTTP services (`Http::preventStrayRequests()`). Tenant isolation and role permissions are tested at two levels (model/policy and real HTTP requests).
 - **Test DB guard:** tests run on `ticketing_test`; `tests/TestCase.php` refuses any database not ending in `_test`.
 - **Static analysis:** Larastan level 7, no errors. **Style:** Pint.
 - **CI:** GitHub Actions runs Pint, Larastan, the frontend build, the type check and the tests on every push.
 
 ## Next (from the WBS)
 
-- Week 3: events, SLA breach command, database notifications and bell, public API (Sanctum), Horizon
+- Week 3: SLA breach command, database notifications and bell, public API (Sanctum), Horizon
 - Week 4: Python + FastAPI + Ollama, then the AI features
 - Business-hours SLA (not in the WBS)

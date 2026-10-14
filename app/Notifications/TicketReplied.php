@@ -5,14 +5,13 @@ namespace App\Notifications;
 use App\Models\Message;
 use App\Models\Ticket;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
  * Tells the other side (the customer, or the assigned agent) about a new public reply.
  */
-class TicketReplied extends Notification implements ShouldQueue
+class TicketReplied extends Notification
 {
     use Queueable;
 
