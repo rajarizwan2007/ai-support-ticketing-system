@@ -23,6 +23,7 @@ A multi-tenant support ticketing app: organizations get their own subdomain, cus
 - **File attachments** on tickets and replies (local storage; files on internal notes hidden from customers).
 - **Feedback in the UI:** success toasts after every ticket action, empty states, spinners and disabled controls while saving.
 - **Email notifications** (sent by queued event listeners): new ticket → staff; public reply → the customer or the assigned agent; assignment → the new assignee. Mailpit catches them in development.
+- **In-app notifications:** a bell in the header with the unread count and the latest 10 (assignment, reply, SLA breach); opening one marks it read and shows the ticket; "Mark all as read".
 - **Similar tickets** (staff only): each ticket is embedded by a local model (Ollama, `qwen3-embedding:0.6b`) in a queued job; the ticket page lists the 5 closest tickets in the organization (pgvector, cosine, HNSW index). Free, and ticket text never leaves the server.
 - **Demo data:** two orgs, `acme` and `globex`, with users, tickets and KB articles.
 
@@ -82,6 +83,6 @@ Similar tickets is built (see [ADR-002](adr/0002-ai-providers.md)); the rest are
 
 ## Next (from the WBS)
 
-- Week 3: database notifications and bell, public API (Sanctum), Horizon
+- Week 3: public API (Sanctum), Horizon
 - Week 4: Python + FastAPI + Ollama, then the AI features
 - Business-hours SLA (not in the WBS)

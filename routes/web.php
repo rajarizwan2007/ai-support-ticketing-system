@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\TicketController;
 use Illuminate\Support\Facades\Route;
 
@@ -14,6 +15,8 @@ Route::middleware('auth')->group(function () {
     Route::patch('tickets/{ticket:reference}', [TicketController::class, 'update'])->name('tickets.update');
     Route::post('tickets/{ticket:reference}/messages', [TicketController::class, 'reply'])->name('tickets.reply');
     Route::get('tickets/{ticket:reference}/attachments/{attachment}', [TicketController::class, 'attachment'])->name('tickets.attachments.show')->scopeBindings();
+    Route::post('notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
+    Route::post('notifications/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');
 });
 
 require __DIR__.'/settings.php';

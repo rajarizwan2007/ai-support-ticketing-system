@@ -182,6 +182,7 @@ erDiagram
 - **Tickets are soft-deleted** (`deleted_at`), so history and SLA reporting survive deletion.
 - **`messages.type = internal_note`** keeps agent-only notes in the same thread. They're filtered out of what customers see.
 - **Attachments always have a `ticket_id`, plus an optional `message_id`** (not polymorphic). Access is always "can you view this ticket?", and files on internal notes are hidden from customers like the notes. Files live on the private disk and are only served through a download route.
+- **In-app notifications use Laravel's `notifications` table** (uuid, polymorphic `notifiable`, JSON `data`), outside the diagram. It has no `organization_id`: every read goes through the signed-in user (`$user->notifications()`), and users are tenant-scoped, so a notification can't be reached from another organization.
 
 ## Possible later additions
 

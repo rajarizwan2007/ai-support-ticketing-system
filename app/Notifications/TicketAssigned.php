@@ -22,7 +22,7 @@ class TicketAssigned extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -31,5 +31,18 @@ class TicketAssigned extends Notification
             ->subject("[{$this->ticket->reference}] Assigned to you: {$this->ticket->subject}")
             ->line("{$this->assignedBy->name} assigned this ticket to you.")
             ->action('View ticket', $this->ticket->url());
+    }
+
+    /**
+     * The in-app notification shown under the bell.
+     *
+     * @return array{ticket_reference: string, text: string}
+     */
+    public function toArray(object $notifiable): array
+    {
+        return [
+            'ticket_reference' => $this->ticket->reference,
+            'text' => "{$this->assignedBy->name} assigned {$this->ticket->reference} to you: {$this->ticket->subject}",
+        ];
     }
 }

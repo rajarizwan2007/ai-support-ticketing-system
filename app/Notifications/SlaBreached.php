@@ -22,7 +22,7 @@ class SlaBreached extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -33,5 +33,18 @@ class SlaBreached extends Notification
             ->line("{$this->ticket->reference} missed its {$this->target->label()} deadline.")
             ->line($this->ticket->subject)
             ->action('View ticket', $this->ticket->url());
+    }
+
+    /**
+     * The in-app notification shown under the bell.
+     *
+     * @return array{ticket_reference: string, text: string}
+     */
+    public function toArray(object $notifiable): array
+    {
+        return [
+            'ticket_reference' => $this->ticket->reference,
+            'text' => "{$this->ticket->reference} missed its {$this->target->label()} SLA deadline.",
+        ];
     }
 }

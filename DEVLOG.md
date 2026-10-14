@@ -5,6 +5,30 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-14 — In-app notifications and bell (WBS 1.3.3)
+
+### Done
+- **`notifications` table** (Laravel's `make:notifications-table`).
+- **`database` channel** added to `TicketAssigned`, `TicketReplied` and `SlaBreached` (they still email too). Each stores `ticket_reference` and a one-line `text`.
+- **Shared prop `notifications`** (lazy, only for signed-in users): `unreadCount` and the latest 10.
+- **Routes:** `POST /notifications/{id}/read` marks it read and redirects to the ticket; `POST /notifications/read-all`. Both go through `$request->user()->notifications()`.
+- **Bell** in the header (`NotificationBell`): red badge with the unread count (9+), dropdown with the latest 10 (unread in bold), "Mark all as read", empty state.
+- **`EscalateTicket`** no longer crashes if the deadline was cleared between the check and the job (e.g. a priority change with no matching policy).
+- **Tests:** new `InAppNotificationsTest` (5: stored for assignment / reply / breach, shared count and list, open marks read + redirects, someone else's is a 404, mark all only touches your own). Suite: 120 passing; Larastan clean.
+- **Checked by hand** through nginx: admin assigned TKT-1005 to the agent → the agent's page data showed 1 unread → opening it redirected to TKT-1005 and the count dropped to 0. (The bell's look was not checked in a browser.)
+- WBS 1.3.3.1 and 1.3.3.2 marked done.
+
+### Decisions
+- **No `organization_id` on `notifications`:** every read goes through the signed-in, tenant-scoped user, so another organization's notifications can't be reached. Adding it would need a custom notification model and channel for no extra safety. Noted in the ERD.
+- **Only assignment, reply and breach** go to the bell (as the WBS lists); "new ticket" stays email-only to avoid flooding every agent's bell.
+- **No real-time push:** the count refreshes on every page visit (Inertia). Broadcasting (Reverb) can come later if needed.
+
+### Next
+- [ ] Public API: Sanctum tokens, endpoints, rate limits, Scribe docs (1.3.4)
+- [ ] Horizon (1.3.2.1)
+
+---
+
 ## 2026-10-14 — SLA breach check (WBS 1.3.2.3)
 
 ### Done

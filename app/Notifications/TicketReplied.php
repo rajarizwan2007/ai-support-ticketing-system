@@ -22,7 +22,7 @@ class TicketReplied extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -32,5 +32,18 @@ class TicketReplied extends Notification
             ->line("{$this->message->author?->name} replied:")
             ->line($this->message->body)
             ->action('View ticket', $this->ticket->url());
+    }
+
+    /**
+     * The in-app notification shown under the bell.
+     *
+     * @return array{ticket_reference: string, text: string}
+     */
+    public function toArray(object $notifiable): array
+    {
+        return [
+            'ticket_reference' => $this->ticket->reference,
+            'text' => "{$this->message->author?->name} replied on {$this->ticket->reference}: {$this->ticket->subject}",
+        ];
     }
 }

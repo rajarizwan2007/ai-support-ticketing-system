@@ -25,9 +25,11 @@ class EscalateTicket implements ShouldQueue
 
     public function handle(): void
     {
+        $due = $this->ticket->{$this->target->dueColumn()};
+
         $this->ticket->messages()->create([
             'type' => MessageType::System,
-            'body' => "{$this->target->label()} SLA breached: it was due {$this->ticket->{$this->target->dueColumn()}->toDayDateTimeString()} (UTC).",
+            'body' => "{$this->target->label()} SLA breached".($due ? ": it was due {$due->toDayDateTimeString()} (UTC)." : '.'),
         ]);
 
         $recipients = User::whereHas('role', fn (Builder $role) => $role->where('slug', Role::ADMIN))
