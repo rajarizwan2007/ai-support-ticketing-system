@@ -11,7 +11,7 @@ A multi-tenant support ticketing app: organizations get their own subdomain, cus
 | Database | PostgreSQL 17 + pgvector | Embeddings live next to the data; no separate vector DB |
 | Cache / sessions / queue | Redis 7 | Fast; needed for queued AI jobs |
 | AI (planned) | Python FastAPI + Ollama (local models) | Learn Python; free, private AI; Claude optional behind the same interface |
-| Runtime | Docker Compose (app, queue, nginx, postgres, redis, mailpit, ollama) | Same setup everywhere; PHP never installed on the host |
+| Runtime | Docker Compose (app, queue, scheduler, nginx, postgres, redis, mailpit, ollama) | Same setup everywhere; PHP never installed on the host |
 
 ## Features so far
 
@@ -19,7 +19,7 @@ A multi-tenant support ticketing app: organizations get their own subdomain, cus
 - **Roles:** admin, agent, customer (one role per user).
 - **Tickets:** list (paginated, with search and filters), detail with message thread, create, reply, internal notes (staff only), change status / priority / assignee. Every change is logged as a system message. A customer reply reopens a pending, resolved or closed ticket.
 - **References** `TKT-1001`, `TKT-1002`, … per organization.
-- **SLA:** due dates set on create from the matching policy and recalculated when the priority changes; `first_responded_at`, `resolved_at`, `closed_at` recorded automatically.
+- **SLA:** due dates set on create from the matching policy and recalculated when the priority changes; `first_responded_at`, `resolved_at`, `closed_at` recorded automatically. **Breach check** every 5 minutes (`tickets:check-sla`): each missed deadline is escalated once by a queued job (system message on the ticket + email to admins and the assignee).
 - **File attachments** on tickets and replies (local storage; files on internal notes hidden from customers).
 - **Feedback in the UI:** success toasts after every ticket action, empty states, spinners and disabled controls while saving.
 - **Email notifications** (sent by queued event listeners): new ticket → staff; public reply → the customer or the assigned agent; assignment → the new assignee. Mailpit catches them in development.
@@ -82,6 +82,6 @@ Similar tickets is built (see [ADR-002](adr/0002-ai-providers.md)); the rest are
 
 ## Next (from the WBS)
 
-- Week 3: SLA breach command, database notifications and bell, public API (Sanctum), Horizon
+- Week 3: database notifications and bell, public API (Sanctum), Horizon
 - Week 4: Python + FastAPI + Ollama, then the AI features
 - Business-hours SLA (not in the WBS)

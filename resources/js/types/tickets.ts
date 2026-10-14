@@ -39,6 +39,8 @@ export type Ticket = {
     first_responded_at: string | null;
     resolved_at: string | null;
     closed_at: string | null;
+    first_response_breached_at: string | null;
+    resolution_breached_at: string | null;
     requester?: UserSummary | null;
     assignee?: UserSummary | null;
     category?: Category | null;

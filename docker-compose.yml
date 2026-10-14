@@ -62,6 +62,36 @@ services:
     networks:
       - ticketing
 
+  scheduler:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    container_name: ticketing-scheduler
+    restart: unless-stopped
+    working_dir: /var/www/html
+    # Runs due scheduled tasks every minute (see routes/console.php), e.g. the SLA breach check.
+    command: ["php", "artisan", "schedule:work"]
+    volumes:
+      - ./:/var/www/html
+      - ./docker/php/php.ini:/usr/local/etc/php/conf.d/zz-app.ini:ro
+    environment:
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-ticketing}
+      DB_USERNAME: ${DB_USERNAME:-ticketing}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-null}
+    depends_on:
+      - app
+    networks:
+      - ticketing
+
   mailpit:
     image: axllent/mailpit:v1.27
     container_name: ticketing-mailpit

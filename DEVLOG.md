@@ -5,6 +5,37 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-14 — SLA breach check (WBS 1.3.2.3)
+
+### Done
+- **Migration:** `tickets.first_response_breached_at` and `resolution_breached_at`. ERD updated.
+- **`SlaTarget` enum** (`FirstResponse`, `Resolution`) maps each target to its due / met / breached columns.
+- **`Ticket::slaBreached($target)` scope:** not resolved or closed, target not met, not escalated yet, deadline passed.
+- **`tickets:check-sla` command:** for each organization (made current in turn), stamps the breach column and queues `EscalateTicket`. Scheduled every 5 minutes with `withoutOverlapping()`.
+- **`EscalateTicket` job:** adds a system message ("First response SLA breached: it was due …") and emails the organization's admins and the assignee (`SlaBreached` notification).
+- **Docker:** new `scheduler` service (`php artisan schedule:work`).
+- **Ticket page** shows breach times in red next to the SLA dates.
+- **Tests:** new `SlaBreachTest` (8: both targets, skips on-time / met / resolved / closed / already escalated, once only, every organization, reset on priority change, job message + recipients, schedule). Suite: 115 passing; Larastan clean.
+- **Checked by hand** on the demo data: 63 breaches escalated, a second run escalated 0; the worker sent 104 emails, each to staff of the ticket's own organization (checked recipient org in the DB against the link host).
+- WBS 1.3.2.3 marked done.
+
+### Decisions
+- **Stamp the breach column before dispatching:** a breach is escalated once, however often the command runs or if the worker is slow.
+- **Loop over organizations in the command** rather than querying across tenants: tenant queries fail closed, and each queued job then carries its organization in Context.
+- **A priority change resets the breach markers** (new deadlines), so a breach of the new deadline is escalated again.
+- **SLA clocks don't pause** for pending / on hold, and use calendar time (business hours still open).
+- **A job, not an event, for escalation** (as the WBS says); the bell (1.3.3) can add a database channel to `SlaBreached`.
+
+### Problems & fixes
+- A first check of "recipient org vs link" guessed the org from the email domain and showed 14 mismatches; the faker agents use random domains. Looking up each recipient in the database showed all 104 correct.
+
+### Next
+- [ ] Database notifications + bell (1.3.3): add the `database` channel to the notifications
+- [ ] Horizon (1.3.2.1)
+- [ ] Optionally pause SLA while pending / on hold
+
+---
+
 ## 2026-10-14 — Events and queued listeners (WBS 1.3.1.2, 1.3.2.2)
 
 ### Done

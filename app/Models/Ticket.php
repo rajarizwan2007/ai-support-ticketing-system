@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\Priority;
 use App\Enums\Sentiment;
+use App\Enums\SlaTarget;
 use App\Enums\TicketChannel;
 use App\Enums\TicketStatus;
 use App\Models\Concerns\BelongsToOrganization;
@@ -94,12 +95,16 @@ class Ticket extends Model
             'first_responded_at' => 'datetime',
             'resolved_at' => 'datetime',
             'closed_at' => 'datetime',
+            'first_response_breached_at' => 'datetime',
+            'resolution_breached_at' => 'datetime',
         ];
     }
 
     /**
      * Use the organization's active SLA policy for the ticket's priority and set
      * the due dates from when the ticket was created. No policy clears them.
+     * New deadlines reset the breach markers, so a breach of a new deadline
+     * is escalated again.
      */
     public function applySlaPolicy(): void
     {
@@ -109,6 +114,8 @@ class Ticket extends Model
         $this->sla_policy_id = $sla?->id;
         $this->first_response_due_at = $sla ? $start->copy()->addMinutes($sla->first_response_minutes) : null;
         $this->resolution_due_at = $sla ? $start->copy()->addMinutes($sla->resolution_minutes) : null;
+        $this->first_response_breached_at = null;
+        $this->resolution_breached_at = null;
     }
 
     /**
@@ -117,6 +124,21 @@ class Ticket extends Model
     public function url(): string
     {
         return $this->organization->url(route('tickets.show', $this->reference, false));
+    }
+
+    /**
+     * Open tickets past the target's deadline that have not met it and have
+     * not been escalated for it yet.
+     *
+     * @param  Builder<Ticket>  $query
+     */
+    #[Scope]
+    protected function slaBreached(Builder $query, SlaTarget $target): void
+    {
+        $query->whereNotIn('status', [TicketStatus::Resolved, TicketStatus::Closed])
+            ->whereNull($target->metColumn())
+            ->whereNull($target->breachedColumn())
+            ->where($target->dueColumn(), '<', now());
     }
 
     /**

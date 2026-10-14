@@ -102,6 +102,8 @@ erDiagram
         timestamp first_responded_at
         timestamp resolved_at
         timestamp closed_at
+        timestamp first_response_breached_at "set when escalated"
+        timestamp resolution_breached_at "set when escalated"
         text ai_summary
         string ai_sentiment "positive, neutral, negative"
         vector embedding "pgvector, for similar-ticket search"

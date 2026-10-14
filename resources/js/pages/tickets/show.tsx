@@ -113,11 +113,26 @@ export default function TicketsShow({
                                 ['Resolution due', ticket.resolution_due_at],
                                 ['Resolved', ticket.resolved_at],
                                 ['Closed', ticket.closed_at],
+                                [
+                                    'First response SLA breached',
+                                    ticket.first_response_breached_at,
+                                ],
+                                [
+                                    'Resolution SLA breached',
+                                    ticket.resolution_breached_at,
+                                ],
                             ] as const
                         ).map(
                             ([label, date]) =>
                                 date && (
-                                    <span key={label}>
+                                    <span
+                                        key={label}
+                                        className={
+                                            label.endsWith('breached')
+                                                ? 'text-red-600 dark:text-red-400'
+                                                : undefined
+                                        }
+                                    >
                                         {label}:{' '}
                                         {new Date(date).toLocaleString()}
                                     </span>
