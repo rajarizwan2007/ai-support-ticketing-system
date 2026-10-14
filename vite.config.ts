@@ -69,9 +69,13 @@ export default defineConfig({
         htmlWhitespaceSensitivity: 'css',
         ignorePatterns: [
             '.github/**',
+            '.claude/**',
             '.scribe/**',
+            'AGENTS.md',
+            'CLAUDE.md',
             'public/docs/**',
             'composer.json',
+            'docker-compose.yml',
             'resources/js/components/ui/*',
             'resources/views/mail/*',
         ],

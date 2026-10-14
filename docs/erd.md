@@ -157,19 +157,19 @@ erDiagram
 
 ## Relationships
 
-| Relationship | Type | Notes |
-|---|---|---|
-| organizations → users, categories, sla_policies, tickets, kb_articles | one-to-many | Every tenant-owned table has `organization_id`; all queries are scoped by it |
-| roles → users | one-to-many | One role per user |
-| users → tickets (`requester_id`) | one-to-many | The customer who opened the ticket |
-| users → tickets (`assignee_id`) | one-to-many, optional | The agent working on it; null = unassigned |
-| tickets → messages | one-to-many | The conversation thread |
-| users → messages | one-to-many, optional | Null author = system message (e.g. "status changed") |
-| tickets → attachments | one-to-many | Every file on the ticket; `message_id` set when uploaded with a reply |
-| categories → categories (`parent_id`) | self-referencing | Lets categories nest, e.g. Billing → Refunds |
-| categories → tickets, kb_articles | one-to-many, optional | Shared taxonomy, so a ticket's category can point to matching articles |
-| sla_policies → tickets | one-to-many, optional | Chosen by priority when the ticket is created |
-| users → kb_articles (`author_id`) | one-to-many | The agent or admin who wrote it |
+| Relationship                                                          | Type                  | Notes                                                                        |
+| --------------------------------------------------------------------- | --------------------- | ---------------------------------------------------------------------------- |
+| organizations → users, categories, sla_policies, tickets, kb_articles | one-to-many           | Every tenant-owned table has `organization_id`; all queries are scoped by it |
+| roles → users                                                         | one-to-many           | One role per user                                                            |
+| users → tickets (`requester_id`)                                      | one-to-many           | The customer who opened the ticket                                           |
+| users → tickets (`assignee_id`)                                       | one-to-many, optional | The agent working on it; null = unassigned                                   |
+| tickets → messages                                                    | one-to-many           | The conversation thread                                                      |
+| users → messages                                                      | one-to-many, optional | Null author = system message (e.g. "status changed")                         |
+| tickets → attachments                                                 | one-to-many           | Every file on the ticket; `message_id` set when uploaded with a reply        |
+| categories → categories (`parent_id`)                                 | self-referencing      | Lets categories nest, e.g. Billing → Refunds                                 |
+| categories → tickets, kb_articles                                     | one-to-many, optional | Shared taxonomy, so a ticket's category can point to matching articles       |
+| sla_policies → tickets                                                | one-to-many, optional | Chosen by priority when the ticket is created                                |
+| users → kb_articles (`author_id`)                                     | one-to-many           | The agent or admin who wrote it                                              |
 
 ## Design decisions
 

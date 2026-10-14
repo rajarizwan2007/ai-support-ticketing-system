@@ -22,10 +22,10 @@ npm install && npm run dev
 
 Demo logins (password `password`):
 
-| Organization | URL | Users |
-|---|---|---|
-| Acme | http://acme.localhost:8088 | admin@ / agent@ / customer@example.com |
-| Globex | http://globex.localhost:8088 | admin@ / agent@ / customer@globex.example.com |
+| Organization | URL                          | Users                                         |
+| ------------ | ---------------------------- | --------------------------------------------- |
+| Acme         | http://acme.localhost:8088   | admin@ / agent@ / customer@example.com        |
+| Globex       | http://globex.localhost:8088 | admin@ / agent@ / customer@globex.example.com |
 
 Emails are sent by the `queue` container and caught by Mailpit: http://localhost:8025 (restart it with `docker compose restart queue` after changing `.env` or PHP code). The queue runs on Laravel Horizon: http://acme.localhost:8088/horizon (local only).
 
@@ -37,7 +37,7 @@ docker compose exec app composer lint      # Pint
 docker compose exec app composer analyse   # Larastan, level 7
 ```
 
-GitHub Actions runs Pint, Larastan, the frontend build, the type-check and the tests on every push to `main` and on pull requests (`.github/workflows/ci.yml`).
+GitHub Actions runs Pint, Larastan, the frontend build, the type-check, frontend lint + format (`vp check`) and the tests on every push to `main` and on pull requests (`.github/workflows/ci.yml`).
 
 ## Docs
 

@@ -4,15 +4,15 @@ A multi-tenant support ticketing app: organizations get their own subdomain, cus
 
 ## Stack
 
-| Layer | Choice | Why |
-|---|---|---|
-| Backend | PHP 8.4, Laravel 13 | |
-| Frontend | Inertia + React + TypeScript (Laravel starter kit, Fortify, Wayfinder) | One app, no separate API; typed routes |
-| Database | PostgreSQL 17 + pgvector | Embeddings live next to the data; no separate vector DB |
-| Cache / sessions / queue | Redis 7 | Fast; needed for queued AI jobs |
-| AI (planned) | Python FastAPI + Ollama (local models) | Learn Python; free, private AI; Claude optional behind the same interface |
-| Queue | Laravel Horizon on Redis | Dashboard for jobs, retries, failures, throughput |
-| Runtime | Docker Compose (app, queue (Horizon), scheduler, nginx, postgres, redis, mailpit, ollama) | Same setup everywhere; PHP never installed on the host |
+| Layer                    | Choice                                                                                    | Why                                                                       |
+| ------------------------ | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Backend                  | PHP 8.4, Laravel 13                                                                       |                                                                           |
+| Frontend                 | Inertia + React + TypeScript (Laravel starter kit, Fortify, Wayfinder)                    | One app, no separate API; typed routes                                    |
+| Database                 | PostgreSQL 17 + pgvector                                                                  | Embeddings live next to the data; no separate vector DB                   |
+| Cache / sessions / queue | Redis 7                                                                                   | Fast; needed for queued AI jobs                                           |
+| AI (planned)             | Python FastAPI + Ollama (local models)                                                    | Learn Python; free, private AI; Claude optional behind the same interface |
+| Queue                    | Laravel Horizon on Redis                                                                  | Dashboard for jobs, retries, failures, throughput                         |
+| Runtime                  | Docker Compose (app, queue (Horizon), scheduler, nginx, postgres, redis, mailpit, ollama) | Same setup everywhere; PHP never installed on the host                    |
 
 ## Features so far
 
@@ -39,12 +39,12 @@ Similar tickets is built (see [ADR-002](adr/0002-ai-providers.md)); the rest are
 
 **Architecture:** Laravel ↔ a **Python FastAPI service** ↔ a **local model (Ollama)** for chat and embeddings. Laravel calls the service from queued jobs; vectors are stored and searched in Postgres with pgvector.
 
-| Feature | How | Prepared in schema |
-|---|---|---|
-| Embeddings | **Built for tickets:** a queued Laravel job (`EmbedTicket`) calls Ollama directly and stores `tickets.embedding`. Routing it through the Python `/embed` service is decided in week 4. | `tickets.embedding` (done), `kb_articles.embedding` (pending) |
-| RAG suggested replies | pgvector finds the top KB chunks; Python `/suggest-reply` returns a draft with its sources | `messages.is_ai_generated`, `kb_article_ticket` pivot |
-| Auto-triage | Python `/triage` returns category, priority, confidence (JSON); runs on ticket created | `category_id`, `priority` |
-| Summary, sentiment | Not in the WBS yet | `tickets.ai_summary`, `tickets.ai_sentiment` |
+| Feature               | How                                                                                                                                                                                    | Prepared in schema                                            |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Embeddings            | **Built for tickets:** a queued Laravel job (`EmbedTicket`) calls Ollama directly and stores `tickets.embedding`. Routing it through the Python `/embed` service is decided in week 4. | `tickets.embedding` (done), `kb_articles.embedding` (pending) |
+| RAG suggested replies | pgvector finds the top KB chunks; Python `/suggest-reply` returns a draft with its sources                                                                                             | `messages.is_ai_generated`, `kb_article_ticket` pivot         |
+| Auto-triage           | Python `/triage` returns category, priority, confidence (JSON); runs on ticket created                                                                                                 | `category_id`, `priority`                                     |
+| Summary, sentiment    | Not in the WBS yet                                                                                                                                                                     | `tickets.ai_summary`, `tickets.ai_sentiment`                  |
 
 - **Human in the loop:** agents accept, edit or reject suggestions; low-confidence triage goes to manual review.
 - **Provider layer:** one interface, two providers: Ollama (default) and Claude (off). Versioned prompts, timeouts, retries, prompt-injection guard (ticket text treated as data).
@@ -54,24 +54,24 @@ Similar tickets is built (see [ADR-002](adr/0002-ai-providers.md)); the rest are
 
 ## Key decisions
 
-| Decision | Reason / trade-off |
-|---|---|
-| **Single-database multi-tenancy** ([ADR-001](adr/0001-multi-tenancy.md)) | Simple ops, one migration path, one vector index. Cost: isolation lives in code, so one missed scope leaks data. |
-| **`BelongsToOrganization` trait + global scope** | Every tenant query is scoped automatically; no manual `where`. |
-| **Fail closed** | No current tenant → queries throw, never return all tenants' rows. |
-| **Tenant in hidden Laravel Context** | Per request, kept out of logs, carried into queued jobs. |
-| **Customers are users** | Requester, assignee and author all point to `users`. |
-| **SLA deadlines stored on the ticket** | Changing a policy doesn't move existing deadlines. |
-| **Enums as strings + PHP enums** (not Postgres enums) | Easier to change. |
-| **Policies for one record, scopes for lists** | `TicketPolicy` decides access; `Ticket::visibleTo()` filters lists. |
-| **Action classes** (`CreateTicket`, `ReplyToTicket`, `UpdateTicket`) | Logic reusable from jobs, commands or an API; controllers only authorize, validate, respond. |
-| **Events + queued listeners** (`TicketCreated`, `TicketReplied`, `TicketStatusChanged`, `TicketAssigned`) | Actions announce what happened; listeners send emails and queue embeddings. New side effects (bell, SLA, triage) are a new listener, not an edit to the action. The request doesn't wait for SMTP. |
-| **API on the tenant subdomain** (`acme.…/api/v1`) | Same tenant resolution as the web app; users are tenant-scoped, so a token used on another organization's subdomain finds no user (401). Token-only (no session/cookie auth on the API). Versioned (`v1`) so it can change without breaking clients. |
-| **API Resources** (`TicketResource`, `MessageResource`) | One fixed JSON shape; internal ids, `organization_id` and the embedding never leave the server. |
-| **Status timestamps in a model hook** | Any status change (incl. future reopen) stamps them for free. |
-| **Horizon only for platform operators** | It shows every organization's jobs, so tenant admins can't open it; in production the gate allows only listed operator emails (none yet). |
-| **No permissions package** | Three roles don't need one. |
-| **Keep it simple** | Smallest code that works; complexity only where unavoidable. |
+| Decision                                                                                                  | Reason / trade-off                                                                                                                                                                                                                                   |
+| --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Single-database multi-tenancy** ([ADR-001](adr/0001-multi-tenancy.md))                                  | Simple ops, one migration path, one vector index. Cost: isolation lives in code, so one missed scope leaks data.                                                                                                                                     |
+| **`BelongsToOrganization` trait + global scope**                                                          | Every tenant query is scoped automatically; no manual `where`.                                                                                                                                                                                       |
+| **Fail closed**                                                                                           | No current tenant → queries throw, never return all tenants' rows.                                                                                                                                                                                   |
+| **Tenant in hidden Laravel Context**                                                                      | Per request, kept out of logs, carried into queued jobs.                                                                                                                                                                                             |
+| **Customers are users**                                                                                   | Requester, assignee and author all point to `users`.                                                                                                                                                                                                 |
+| **SLA deadlines stored on the ticket**                                                                    | Changing a policy doesn't move existing deadlines.                                                                                                                                                                                                   |
+| **Enums as strings + PHP enums** (not Postgres enums)                                                     | Easier to change.                                                                                                                                                                                                                                    |
+| **Policies for one record, scopes for lists**                                                             | `TicketPolicy` decides access; `Ticket::visibleTo()` filters lists.                                                                                                                                                                                  |
+| **Action classes** (`CreateTicket`, `ReplyToTicket`, `UpdateTicket`)                                      | Logic reusable from jobs, commands or an API; controllers only authorize, validate, respond.                                                                                                                                                         |
+| **Events + queued listeners** (`TicketCreated`, `TicketReplied`, `TicketStatusChanged`, `TicketAssigned`) | Actions announce what happened; listeners send emails and queue embeddings. New side effects (bell, SLA, triage) are a new listener, not an edit to the action. The request doesn't wait for SMTP.                                                   |
+| **API on the tenant subdomain** (`acme.…/api/v1`)                                                         | Same tenant resolution as the web app; users are tenant-scoped, so a token used on another organization's subdomain finds no user (401). Token-only (no session/cookie auth on the API). Versioned (`v1`) so it can change without breaking clients. |
+| **API Resources** (`TicketResource`, `MessageResource`)                                                   | One fixed JSON shape; internal ids, `organization_id` and the embedding never leave the server.                                                                                                                                                      |
+| **Status timestamps in a model hook**                                                                     | Any status change (incl. future reopen) stamps them for free.                                                                                                                                                                                        |
+| **Horizon only for platform operators**                                                                   | It shows every organization's jobs, so tenant admins can't open it; in production the gate allows only listed operator emails (none yet).                                                                                                            |
+| **No permissions package**                                                                                | Three roles don't need one.                                                                                                                                                                                                                          |
+| **Keep it simple**                                                                                        | Smallest code that works; complexity only where unavoidable.                                                                                                                                                                                         |
 
 ## Concepts worth knowing
 
@@ -84,7 +84,7 @@ Similar tickets is built (see [ADR-002](adr/0002-ai-providers.md)); the rest are
 - **Tests:** PHPUnit, 133 passing. Tests never call real HTTP services (`Http::preventStrayRequests()`). Tenant isolation and role permissions are tested at two levels (model/policy and real HTTP requests).
 - **Test DB guard:** tests run on `ticketing_test`; `tests/TestCase.php` refuses any database not ending in `_test`.
 - **Static analysis:** Larastan level 7, no errors. **Style:** Pint.
-- **CI:** GitHub Actions runs Pint, Larastan, the frontend build, the type check and the tests on every push.
+- **CI:** GitHub Actions runs Pint, Larastan, the frontend build, the type check, frontend lint + format (`vp check`) and the tests on every push.
 
 ## Next (from the WBS)
 

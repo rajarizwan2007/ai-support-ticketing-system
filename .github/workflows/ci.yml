@@ -68,5 +68,8 @@ jobs:
       - name: Type-check
         run: npm run types:check
 
+      - name: Lint and format (vp check)
+        run: npm run check
+
       - name: Tests
         run: php artisan test

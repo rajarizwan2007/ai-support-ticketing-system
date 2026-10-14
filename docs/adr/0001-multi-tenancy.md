@@ -17,20 +17,22 @@ Many organizations (tenants) share one support system. Each must only ever see i
 
 ## Options considered
 
-| Option | Why rejected |
-|---|---|
-| Database per tenant | Migrations run N times, more connections and backups, cross-tenant reporting is hard, and every tenant needs its own vector index. Too much ops work for this project. |
-| Schema per tenant (Postgres schemas) | Same migration and reporting pain, and the tooling is awkward in Laravel. |
+| Option                               | Why rejected                                                                                                                                                           |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Database per tenant                  | Migrations run N times, more connections and backups, cross-tenant reporting is hard, and every tenant needs its own vector index. Too much ops work for this project. |
+| Schema per tenant (Postgres schemas) | Same migration and reporting pain, and the tooling is awkward in Laravel.                                                                                              |
 
 ## Consequences
 
 **Positive**
+
 - Low cost and simple operations: one database to run, back up and monitor.
 - One migration path for all tenants.
 - Cross-tenant reporting and admin are easy.
 - One pgvector index for all AI search.
 
 **Negative**
+
 - Isolation is enforced in code: one missed scope is a data leak.
 - One heavy tenant can slow down the others ("noisy neighbour").
 - Restoring or exporting a single tenant is harder.

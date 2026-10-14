@@ -90,7 +90,9 @@ export default function TicketsIndex({
                                     className={selectClassName}
                                 >
                                     <option value="">Any assignee</option>
-                                    <option value="unassigned">Unassigned</option>
+                                    <option value="unassigned">
+                                        Unassigned
+                                    </option>
                                     {staff.map((user) => (
                                         <option key={user.id} value={user.id}>
                                             {user.name}
