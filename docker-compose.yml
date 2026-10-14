@@ -111,6 +111,28 @@ services:
     networks:
       - ticketing
 
+  # Python FastAPI service in front of Ollama (ai-service/). Reachable from the
+  # other containers at http://ai:8000; API docs at http://localhost:8001/docs.
+  ai:
+    build: ./ai-service
+    container_name: ticketing-ai
+    restart: unless-stopped
+    # Host user, so caches written into the bind mount stay yours.
+    user: "${UID:-1000}:${GID:-1000}"
+    # --reload: code changes in ai-service/app apply without a restart.
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    volumes:
+      - ./ai-service:/app
+    environment:
+      OLLAMA_URL: http://ollama:11434
+      EMBEDDING_MODEL: ${OLLAMA_EMBEDDING_MODEL:-qwen3-embedding:0.6b}
+    ports:
+      - "127.0.0.1:${FORWARD_AI_PORT:-8001}:8000"
+    depends_on:
+      - ollama
+    networks:
+      - ticketing
+
   nginx:
     image: nginx:1.27-alpine
     container_name: ticketing-nginx

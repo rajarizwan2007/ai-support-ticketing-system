@@ -4,15 +4,15 @@ A multi-tenant support ticketing app: organizations get their own subdomain, cus
 
 ## Stack
 
-| Layer                    | Choice                                                                                    | Why                                                                       |
-| ------------------------ | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| Backend                  | PHP 8.4, Laravel 13                                                                       |                                                                           |
-| Frontend                 | Inertia + React + TypeScript (Laravel starter kit, Fortify, Wayfinder)                    | One app, no separate API; typed routes                                    |
-| Database                 | PostgreSQL 17 + pgvector                                                                  | Embeddings live next to the data; no separate vector DB                   |
-| Cache / sessions / queue | Redis 7                                                                                   | Fast; needed for queued AI jobs                                           |
-| AI (planned)             | Python FastAPI + Ollama (local models)                                                    | Learn Python; free, private AI; Claude optional behind the same interface |
-| Queue                    | Laravel Horizon on Redis                                                                  | Dashboard for jobs, retries, failures, throughput                         |
-| Runtime                  | Docker Compose (app, queue (Horizon), scheduler, nginx, postgres, redis, mailpit, ollama) | Same setup everywhere; PHP never installed on the host                    |
+| Layer                    | Choice                                                                                        | Why                                                                       |
+| ------------------------ | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Backend                  | PHP 8.4, Laravel 13                                                                           |                                                                           |
+| Frontend                 | Inertia + React + TypeScript (Laravel starter kit, Fortify, Wayfinder)                        | One app, no separate API; typed routes                                    |
+| Database                 | PostgreSQL 17 + pgvector                                                                      | Embeddings live next to the data; no separate vector DB                   |
+| Cache / sessions / queue | Redis 7                                                                                       | Fast; needed for queued AI jobs                                           |
+| AI service               | Python 3.13 FastAPI (uv, Pydantic, httpx) + Ollama (local models)                             | Learn Python; free, private AI; Claude optional behind the same interface |
+| Queue                    | Laravel Horizon on Redis                                                                      | Dashboard for jobs, retries, failures, throughput                         |
+| Runtime                  | Docker Compose (app, queue (Horizon), scheduler, nginx, postgres, redis, mailpit, ollama, ai) | Same setup everywhere; PHP never installed on the host                    |
 
 ## Features so far
 
@@ -39,12 +39,12 @@ Similar tickets is built (see [ADR-002](adr/0002-ai-providers.md)); the rest are
 
 **Architecture:** Laravel ↔ a **Python FastAPI service** ↔ a **local model (Ollama)** for chat and embeddings. Laravel calls the service from queued jobs; vectors are stored and searched in Postgres with pgvector.
 
-| Feature               | How                                                                                                                                                                                    | Prepared in schema                                            |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| Embeddings            | **Built for tickets:** a queued Laravel job (`EmbedTicket`) calls Ollama directly and stores `tickets.embedding`. Routing it through the Python `/embed` service is decided in week 4. | `tickets.embedding` (done), `kb_articles.embedding` (pending) |
-| RAG suggested replies | pgvector finds the top KB chunks; Python `/suggest-reply` returns a draft with its sources                                                                                             | `messages.is_ai_generated`, `kb_article_ticket` pivot         |
-| Auto-triage           | Python `/triage` returns category, priority, confidence (JSON); runs on ticket created                                                                                                 | `category_id`, `priority`                                     |
-| Summary, sentiment    | Not in the WBS yet                                                                                                                                                                     | `tickets.ai_summary`, `tickets.ai_sentiment`                  |
+| Feature               | How                                                                                                                                                                                                                | Prepared in schema                                            |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
+| Embeddings            | **Built for tickets:** a queued Laravel job (`EmbedTicket`) calls Ollama directly and stores `tickets.embedding`. The Python service already has `/embed`; Laravel switches to it with the KB embeddings (week 5). | `tickets.embedding` (done), `kb_articles.embedding` (pending) |
+| RAG suggested replies | pgvector finds the top KB chunks; Python `/suggest-reply` returns a draft with its sources                                                                                                                         | `messages.is_ai_generated`, `kb_article_ticket` pivot         |
+| Auto-triage           | Python `/triage` returns category, priority, confidence (JSON); runs on ticket created                                                                                                                             | `category_id`, `priority`                                     |
+| Summary, sentiment    | Not in the WBS yet                                                                                                                                                                                                 | `tickets.ai_summary`, `tickets.ai_sentiment`                  |
 
 - **Human in the loop:** agents accept, edit or reject suggestions; low-confidence triage goes to manual review.
 - **Provider layer:** one interface, two providers: Ollama (default) and Claude (off). Versioned prompts, timeouts, retries, prompt-injection guard (ticket text treated as data).
@@ -81,12 +81,13 @@ Similar tickets is built (see [ADR-002](adr/0002-ai-providers.md)); the rest are
 
 ## Quality
 
-- **Tests:** PHPUnit, 133 passing. Tests never call real HTTP services (`Http::preventStrayRequests()`). Tenant isolation and role permissions are tested at two levels (model/policy and real HTTP requests).
+- **Tests:** PHPUnit, 137 passing; pytest (9) and ruff for the Python service. Tests never call real HTTP services (`Http::preventStrayRequests()`). Tenant isolation and role permissions are tested at two levels (model/policy and real HTTP requests).
 - **Test DB guard:** tests run on `ticketing_test`; `tests/TestCase.php` refuses any database not ending in `_test`.
 - **Static analysis:** Larastan level 7, no errors. **Style:** Pint.
-- **CI:** GitHub Actions runs Pint, Larastan, the frontend build, the type check, frontend lint + format (`vp check`) and the tests on every push.
+- **CI:** GitHub Actions runs Pint, Larastan, the frontend build, the type check, frontend lint + format (`vp check`) and the tests on every push; a second job runs ruff and pytest for the Python service.
 
 ## Next (from the WBS)
 
-- Week 4: Python + FastAPI + Ollama, then the AI features
+- Week 4: pick and pull a small local chat model (Python service is built: `/health`, `/embed`)
+- Week 5: AI features (KB embeddings, RAG replies, auto-triage)
 - Business-hours SLA (not in the WBS)

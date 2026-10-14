@@ -6,7 +6,7 @@ A multi-tenant support ticketing app (Laravel 13, Inertia + React). Work in prog
 
 ## Stack
 
-PHP 8.4 · Laravel 13 · PostgreSQL 17 + pgvector · Redis 7 · Ollama (local embeddings) · Inertia/React/TypeScript · Docker Compose
+PHP 8.4 · Laravel 13 · PostgreSQL 17 + pgvector · Redis 7 · Ollama (local embeddings) · Python 3.13 FastAPI · Inertia/React/TypeScript · Docker Compose
 
 ## Getting started
 
@@ -28,6 +28,8 @@ Demo logins (password `password`):
 | Globex       | http://globex.localhost:8088 | admin@ / agent@ / customer@globex.example.com |
 
 Emails are sent by the `queue` container and caught by Mailpit: http://localhost:8025 (restart it with `docker compose restart queue` after changing `.env` or PHP code). The queue runs on Laravel Horizon: http://acme.localhost:8088/horizon (local only).
+
+The Python AI service (`ai-service/`, FastAPI) runs in the `ai` container: http://localhost:8001/docs. Check it from Laravel with `docker compose exec app php artisan ai:health`; run its tests with `docker compose exec ai pytest`.
 
 ## Development
 

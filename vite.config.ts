@@ -71,6 +71,7 @@ export default defineConfig({
             '.github/**',
             '.claude/**',
             '.scribe/**',
+            'ai-service/**',
             'AGENTS.md',
             'CLAUDE.md',
             'public/docs/**',

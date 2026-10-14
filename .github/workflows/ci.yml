@@ -73,3 +73,28 @@ jobs:
 
       - name: Tests
         run: php artisan test
+
+  ai-service:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ai-service
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: 0.9.5
+
+      - name: Install dependencies
+        run: uv sync --locked --python 3.13
+
+      - name: Ruff
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+
+      - name: Tests
+        run: uv run pytest

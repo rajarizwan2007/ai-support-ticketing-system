@@ -5,6 +5,41 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-14 — Python FastAPI service (WBS 1.4.3–1.4.5)
+
+### Done
+
+- **`ai-service/`**: Python 3.13, FastAPI, managed with **uv** (`pyproject.toml` + `uv.lock`). Settings from env variables via `pydantic-settings` (`OLLAMA_URL`, `EMBEDDING_MODEL`, `OLLAMA_TIMEOUT`).
+- **Endpoints:** `GET /health` (`{"status": "ok", "ollama": true|false}`) and `POST /embed` (`{"texts": [...]}` → one 1024-dim vector per text; 1–32 non-empty texts, else 422; Ollama down → 503). Auto docs at http://localhost:8001/docs.
+- **One shared `httpx.AsyncClient`** per app (FastAPI lifespan), injected with `Depends`, so tests swap it out.
+- **Docker:** `ai` service (Dockerfile on `python:3.13-slim` + uv 0.9.5), runs as the host user, `uvicorn --reload` with the code mounted; port bound to 127.0.0.1 only.
+- **Laravel → Python:** `config('services.ai.url')` (`AI_SERVICE_URL`) and `php artisan ai:health`; 4 tests with `Http::fake()`.
+- **Python tests:** pytest + FastAPI `TestClient`, Ollama replaced by `httpx.MockTransport` (9 tests: health up/down/unreachable, embed OK and request body, 4 invalid inputs, 503). **ruff** lint + format.
+- **CI:** new `ai-service` job (setup-uv, `uv sync --locked`, ruff, pytest).
+- **Checked by hand:** `/health` → ollama true; `/embed` with 2 texts → 2 × 1024 vectors from `qwen3-embedding:0.6b`; `ai:health` from the `app` container passes.
+- WBS 1.4.3.1–1.4.3.3, 1.4.5.1, 1.4.5.2 done; 1.4.4.1–1.4.4.2 in progress (embedding model only, no chat model yet).
+
+### Decisions
+
+- **uv** over pip + venv: one tool, a lock file, fast installs (like Composer for PHP).
+- **Laravel's `EmbedTicket` still calls Ollama directly** for now; it moves to the Python `/embed` with the KB embeddings in week 5 (WBS 1.5.1.3), so the change lands with its tests.
+- **No auth between Laravel and the AI service:** it is only reachable on the Docker network (and 127.0.0.1 for docs). Add a shared token before it is exposed anywhere else.
+- **No chat model yet:** choosing one (size vs quality vs RAM) is the next decision and gets its own ADR (ADR-002 said text generation is separate).
+
+### Problems & fixes
+
+- The first container run wrote root-owned `__pycache__` into the repo → the `ai` container runs as the host user.
+- Starlette's test client warned that plain `httpx` is deprecated → added `httpx2` as a dev dependency.
+- `vp check` tried to format `pyproject.toml` → `ai-service/**` excluded (ruff formats Python).
+- A Laravel test faked `/health` twice in one test; the second fake never applied → split into separate tests.
+
+### Next
+
+- [ ] Choose and pull a small chat model (ADR-003), call it from Python (finish 1.4.4)
+- [ ] Python learning tasks 1.4.1–1.4.2 (yours)
+
+---
+
 ## 2026-10-14 — Catch-up: formatting check in CI (WBS 1.3.5.3)
 
 ### Done
