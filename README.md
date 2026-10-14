@@ -48,4 +48,5 @@ GitHub Actions runs Pint, Larastan, the frontend build, the type-check, frontend
 - API docs (Scribe): http://localhost:8088/docs/ — regenerate with `docker compose exec app php artisan scribe:generate`
 - [ADR-001: multi-tenancy](docs/adr/0001-multi-tenancy.md)
 - [ADR-002: embedding model for similar tickets](docs/adr/0002-ai-providers.md)
+- [ADR-003: local chat model](docs/adr/0003-chat-model.md)
 - [Dev log](DEVLOG.md)

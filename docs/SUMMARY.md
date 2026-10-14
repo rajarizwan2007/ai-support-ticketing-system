@@ -37,7 +37,7 @@ A multi-tenant support ticketing app: organizations get their own subdomain, cus
 
 Similar tickets is built (see [ADR-002](adr/0002-ai-providers.md)); the rest are planned.
 
-**Architecture:** Laravel ↔ a **Python FastAPI service** ↔ a **local model (Ollama)** for chat and embeddings. Laravel calls the service from queued jobs; vectors are stored and searched in Postgres with pgvector.
+**Architecture:** Laravel ↔ a **Python FastAPI service** ↔ a **local model (Ollama)**: `qwen3-embedding:0.6b` for embeddings, `gemma3:1b` for chat ([ADR-003](adr/0003-chat-model.md): best of three small models on a 12-ticket triage test; priority suggestions were unreliable for all of them, so agents confirm them). Laravel calls the service from queued jobs; vectors are stored and searched in Postgres with pgvector.
 
 | Feature               | How                                                                                                                                                                                                                | Prepared in schema                                            |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
@@ -81,13 +81,12 @@ Similar tickets is built (see [ADR-002](adr/0002-ai-providers.md)); the rest are
 
 ## Quality
 
-- **Tests:** PHPUnit, 137 passing; pytest (9) and ruff for the Python service. Tests never call real HTTP services (`Http::preventStrayRequests()`). Tenant isolation and role permissions are tested at two levels (model/policy and real HTTP requests).
+- **Tests:** PHPUnit, 138 passing; pytest (13) and ruff for the Python service. Tests never call real HTTP services (`Http::preventStrayRequests()`). Tenant isolation and role permissions are tested at two levels (model/policy and real HTTP requests).
 - **Test DB guard:** tests run on `ticketing_test`; `tests/TestCase.php` refuses any database not ending in `_test`.
 - **Static analysis:** Larastan level 7, no errors. **Style:** Pint.
 - **CI:** GitHub Actions runs Pint, Larastan, the frontend build, the type check, frontend lint + format (`vp check`) and the tests on every push; a second job runs ruff and pytest for the Python service.
 
 ## Next (from the WBS)
 
-- Week 4: pick and pull a small local chat model (Python service is built: `/health`, `/embed`)
 - Week 5: AI features (KB embeddings, RAG replies, auto-triage)
 - Business-hours SLA (not in the WBS)

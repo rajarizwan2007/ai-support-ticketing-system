@@ -7,11 +7,13 @@ from fastapi.testclient import TestClient
 from app.main import app, get_ollama
 from app.ollama import Ollama
 
+TAGS = {"models": [{"name": "embed-model"}, {"name": "chat-model"}]}
+
 
 def fake_ollama(handler) -> Ollama:
     """An Ollama client whose HTTP calls are answered by `handler`, never the network."""
     client = httpx.AsyncClient(base_url="http://ollama", transport=httpx.MockTransport(handler))
-    return Ollama(client, "test-model")
+    return Ollama(client, "embed-model", "chat-model")
 
 
 @pytest.fixture
@@ -26,28 +28,33 @@ def use(handler) -> None:
 
 
 @pytest.mark.parametrize(
-    ("handler", "ollama_up"),
+    ("tags", "missing"),
     [
-        (lambda request: httpx.Response(200, json={"version": "0.35.0"}), True),
-        (lambda request: httpx.Response(500), False),
+        (TAGS, []),
+        ({"models": [{"name": "embed-model"}]}, ["chat-model"]),
+        ({"models": []}, ["embed-model", "chat-model"]),
     ],
 )
-def test_health_reports_whether_ollama_answers(client, handler, ollama_up):
-    use(handler)
+def test_health_lists_models_that_are_not_pulled(client, tags, missing):
+    use(lambda request: httpx.Response(200, json=tags))
 
     response = client.get("/health")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "ollama": ollama_up}
+    assert response.json() == {"status": "ok", "ollama": True, "missing_models": missing}
 
 
-def test_health_is_ok_when_ollama_is_unreachable(client):
+def test_health_is_ok_when_ollama_errors_or_is_unreachable(client):
     def unreachable(request):
         raise httpx.ConnectError("refused")
 
-    use(unreachable)
-
-    assert client.get("/health").json() == {"status": "ok", "ollama": False}
+    for handler in (lambda request: httpx.Response(500), unreachable):
+        use(handler)
+        assert client.get("/health").json() == {
+            "status": "ok",
+            "ollama": False,
+            "missing_models": [],
+        }
 
 
 def test_embed_returns_one_vector_per_text(client):
@@ -62,8 +69,8 @@ def test_embed_returns_one_vector_per_text(client):
     response = client.post("/embed", json={"texts": ["printer broken", "login fails"]})
 
     assert response.status_code == 200
-    assert response.json() == {"model": "test-model", "embeddings": [[0.1, 0.2], [0.3, 0.4]]}
-    assert sent["json"] == {"model": "test-model", "input": ["printer broken", "login fails"]}
+    assert response.json() == {"model": "embed-model", "embeddings": [[0.1, 0.2], [0.3, 0.4]]}
+    assert sent["json"] == {"model": "embed-model", "input": ["printer broken", "login fails"]}
 
 
 @pytest.mark.parametrize("body", [{"texts": []}, {"texts": [""]}, {}, {"texts": ["x"] * 33}])

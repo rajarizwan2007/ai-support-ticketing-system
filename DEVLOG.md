@@ -5,6 +5,31 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-14 — Local chat model (WBS 1.4.4, ADR-003)
+
+### Done
+
+- **Compared three small chat models** that fit in the ~2 GB of free RAM (`gemma3:1b`, `qwen3.5:0.8b`, `qwen3:1.7b`) on 12 labeled tickets with a JSON schema: all 12/12 valid JSON; category 12 / 10 / 11; priority 5/12 for all. Script kept in `ai-service/scripts/compare_chat_models.py`.
+- **Chose `gemma3:1b`** (ADR-003); removed the other two from Ollama.
+- **AI service:** `CHAT_MODEL` setting; `Ollama.chat(system, user, schema=None)` (temperature 0, optional JSON schema via Ollama's `format`); `/health` now lists `missing_models` (configured but not pulled).
+- **Laravel:** `ai:health` fails and names the model when one isn't pulled.
+- **Tests:** pytest 13 (new `test_ollama.py`: chat request body, no `format` without a schema, error → `OllamaError`; health with missing models); PHPUnit 138.
+- **Checked by hand:** `/health` → no missing models; a real `chat()` call answered in one sentence; the comparison script re-run → same result.
+- WBS 1.4.4.1–1.4.4.3 done.
+
+### Decisions
+
+- **`gemma3:1b`:** best category accuracy, steady speed, fits next to the embedding model. 4B models ruled out on memory.
+- **AI priority is a suggestion only:** every model got priority wrong more often than right, so an agent confirms it (fits the planned human review).
+- **Temperature 0 + JSON schema** for triage: repeatable answers that always parse.
+
+### Next
+
+- [ ] Python learning tasks 1.4.1–1.4.2 (yours)
+- [ ] Week 5: KB articles CRUD, embeddings through Python `/embed`, RAG replies, auto-triage
+
+---
+
 ## 2026-10-14 — Python FastAPI service (WBS 1.4.3–1.4.5)
 
 ### Done

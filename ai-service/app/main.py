@@ -16,7 +16,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     async with httpx.AsyncClient(
         base_url=settings.ollama_url, timeout=settings.ollama_timeout
     ) as client:
-        app.state.ollama = Ollama(client, settings.embedding_model)
+        app.state.ollama = Ollama(client, settings.embedding_model, settings.chat_model)
         yield
 
 
@@ -33,6 +33,7 @@ OllamaDep = Annotated[Ollama, Depends(get_ollama)]
 class Health(BaseModel):
     status: str
     ollama: bool
+    missing_models: list[str]
 
 
 class EmbedRequest(BaseModel):
@@ -46,8 +47,10 @@ class EmbedResponse(BaseModel):
 
 @app.get("/health")
 async def health(ollama: OllamaDep) -> Health:
-    """The service is up; `ollama` says whether the model server answers."""
-    return Health(status="ok", ollama=await ollama.is_up())
+    """The service is up; `ollama` says whether the model server answers, and
+    `missing_models` lists configured models that still need `ollama pull`."""
+    missing = await ollama.missing_models()
+    return Health(status="ok", ollama=missing is not None, missing_models=missing or [])
 
 
 @app.post("/embed")

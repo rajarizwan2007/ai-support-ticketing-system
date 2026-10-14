@@ -36,6 +36,12 @@ class CheckAiService extends Command
             return self::FAILURE;
         }
 
+        if ($missing = $response->json('missing_models')) {
+            $this->warn('Models not pulled yet: '.implode(', ', $missing).'. Run: docker compose exec ollama ollama pull <model>');
+
+            return self::FAILURE;
+        }
+
         $this->info("AI service and Ollama are up at {$url}.");
 
         return self::SUCCESS;
