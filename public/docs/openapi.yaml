@@ -1,0 +1,646 @@
+openapi: 3.0.3
+info:
+  title: 'ai-support-ticketing-system API Documentation'
+  description: 'Create, list, show and reply to support tickets in your organization.'
+  version: 1.0.0
+servers:
+  -
+    url: 'http://acme.localhost:8088'
+tags:
+  -
+    name: Authentication
+    description: ''
+  -
+    name: Tickets
+    description: ''
+components:
+  securitySchemes:
+    default:
+      type: http
+      scheme: bearer
+      description: 'Get a token from <code>POST /api/v1/tokens</code> with your email and password.'
+security:
+  -
+    default: []
+paths:
+  /api/v1/tokens:
+    post:
+      summary: 'Create a token'
+      operationId: createAToken
+      description: 'Log in with email and password and get a token for the Authorization header.'
+      parameters: []
+      responses:
+        201:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  token: 1|aBcDeFgHiJkLmNoPqRsTuVwXyZ
+                properties:
+                  token:
+                    type: string
+                    example: 1|aBcDeFgHiJkLmNoPqRsTuVwXyZ
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 'Must be a valid email address.'
+                  example: gbailey@example.net
+                password:
+                  type: string
+                  description: ''
+                  example: '|]|{+-'
+                device_name:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: v
+              required:
+                - email
+                - password
+                - device_name
+      security: []
+  /api/v1/tokens/current:
+    delete:
+      summary: 'Revoke the current token'
+      operationId: revokeTheCurrentToken
+      description: ''
+      parameters: []
+      responses:
+        204:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                nullable: true
+      tags:
+        - Authentication
+  /api/v1/tickets:
+    get:
+      summary: 'List tickets'
+      operationId: listTickets
+      description: 'Newest first, 20 per page.'
+      parameters:
+        -
+          in: query
+          name: status
+          description: 'Only tickets with this status.'
+          example: closed
+          required: false
+          schema:
+            type: string
+            description: 'Only tickets with this status.'
+            example: closed
+            enum:
+              - open
+              - pending
+              - on_hold
+              - resolved
+              - closed
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    -
+                      reference: TKT-911680
+                      subject: 'Quidem nostrum qui commodi incidunt iure odit'
+                      description: "Modi ipsum nostrum omnis autem et. Aut dolores enim non facere tempora ex voluptatem. Praesentium quis adipisci molestias fugit. Distinctio eum doloremque id aut libero aliquam veniam corporis.\n\nDeleniti nemo odit quia officia. Dignissimos neque blanditiis odio. Excepturi doloribus delectus fugit qui repudiandae laboriosam."
+                      status: open
+                      priority: low
+                      category: null
+                      requester: 'Brennon Anderson'
+                      assignee: null
+                      first_response_due_at: null
+                      resolution_due_at: null
+                      first_responded_at: null
+                      resolved_at: null
+                      created_at: '2026-10-14T11:00:22.000000Z'
+                      updated_at: '2026-10-14T11:00:22.000000Z'
+                    -
+                      reference: TKT-750722
+                      subject: 'Ex repellendus assumenda et tenetur ab reiciendis'
+                      description: "Deserunt ducimus corrupti et dolores quia maiores. Odit doloribus repellat officiis corporis nesciunt ut ratione iure. Molestiae ut rem est esse. Aut molestiae sunt suscipit doloribus fugiat.\n\nDeserunt et error neque recusandae et. Dolorem et ut dicta. Assumenda consequatur ut et sunt quisquam. Repellendus ut eaque alias ratione dolores."
+                      status: open
+                      priority: low
+                      category: null
+                      requester: 'Sheldon Herman'
+                      assignee: null
+                      first_response_due_at: null
+                      resolution_due_at: null
+                      first_responded_at: null
+                      resolved_at: null
+                      created_at: '2026-10-14T11:00:22.000000Z'
+                      updated_at: '2026-10-14T11:00:22.000000Z'
+                  links:
+                    first: '/?page=1'
+                    last: '/?page=1'
+                    prev: null
+                    next: null
+                  meta:
+                    current_page: 1
+                    from: 1
+                    last_page: 1
+                    links:
+                      -
+                        url: null
+                        label: '&laquo; Previous'
+                        page: null
+                        active: false
+                      -
+                        url: '/?page=1'
+                        label: '1'
+                        page: 1
+                        active: true
+                      -
+                        url: null
+                        label: 'Next &raquo;'
+                        page: null
+                        active: false
+                    path: /
+                    per_page: 20
+                    to: 2
+                    total: 2
+                properties:
+                  data:
+                    type: array
+                    example:
+                      -
+                        reference: TKT-911680
+                        subject: 'Quidem nostrum qui commodi incidunt iure odit'
+                        description: "Modi ipsum nostrum omnis autem et. Aut dolores enim non facere tempora ex voluptatem. Praesentium quis adipisci molestias fugit. Distinctio eum doloremque id aut libero aliquam veniam corporis.\n\nDeleniti nemo odit quia officia. Dignissimos neque blanditiis odio. Excepturi doloribus delectus fugit qui repudiandae laboriosam."
+                        status: open
+                        priority: low
+                        category: null
+                        requester: 'Brennon Anderson'
+                        assignee: null
+                        first_response_due_at: null
+                        resolution_due_at: null
+                        first_responded_at: null
+                        resolved_at: null
+                        created_at: '2026-10-14T11:00:22.000000Z'
+                        updated_at: '2026-10-14T11:00:22.000000Z'
+                      -
+                        reference: TKT-750722
+                        subject: 'Ex repellendus assumenda et tenetur ab reiciendis'
+                        description: "Deserunt ducimus corrupti et dolores quia maiores. Odit doloribus repellat officiis corporis nesciunt ut ratione iure. Molestiae ut rem est esse. Aut molestiae sunt suscipit doloribus fugiat.\n\nDeserunt et error neque recusandae et. Dolorem et ut dicta. Assumenda consequatur ut et sunt quisquam. Repellendus ut eaque alias ratione dolores."
+                        status: open
+                        priority: low
+                        category: null
+                        requester: 'Sheldon Herman'
+                        assignee: null
+                        first_response_due_at: null
+                        resolution_due_at: null
+                        first_responded_at: null
+                        resolved_at: null
+                        created_at: '2026-10-14T11:00:22.000000Z'
+                        updated_at: '2026-10-14T11:00:22.000000Z'
+                    items:
+                      type: object
+                      properties:
+                        reference:
+                          type: string
+                          example: TKT-911680
+                        subject:
+                          type: string
+                          example: 'Quidem nostrum qui commodi incidunt iure odit'
+                        description:
+                          type: string
+                          example: "Modi ipsum nostrum omnis autem et. Aut dolores enim non facere tempora ex voluptatem. Praesentium quis adipisci molestias fugit. Distinctio eum doloremque id aut libero aliquam veniam corporis.\n\nDeleniti nemo odit quia officia. Dignissimos neque blanditiis odio. Excepturi doloribus delectus fugit qui repudiandae laboriosam."
+                        status:
+                          type: string
+                          example: open
+                        priority:
+                          type: string
+                          example: low
+                        category:
+                          type: string
+                          example: null
+                          nullable: true
+                        requester:
+                          type: string
+                          example: 'Brennon Anderson'
+                        assignee:
+                          type: string
+                          example: null
+                          nullable: true
+                        first_response_due_at:
+                          type: string
+                          example: null
+                          nullable: true
+                        resolution_due_at:
+                          type: string
+                          example: null
+                          nullable: true
+                        first_responded_at:
+                          type: string
+                          example: null
+                          nullable: true
+                        resolved_at:
+                          type: string
+                          example: null
+                          nullable: true
+                        created_at:
+                          type: string
+                          example: '2026-10-14T11:00:22.000000Z'
+                        updated_at:
+                          type: string
+                          example: '2026-10-14T11:00:22.000000Z'
+                  links:
+                    type: object
+                    properties:
+                      first:
+                        type: string
+                        example: '/?page=1'
+                      last:
+                        type: string
+                        example: '/?page=1'
+                      prev:
+                        type: string
+                        example: null
+                        nullable: true
+                      next:
+                        type: string
+                        example: null
+                        nullable: true
+                  meta:
+                    type: object
+                    properties:
+                      current_page:
+                        type: integer
+                        example: 1
+                      from:
+                        type: integer
+                        example: 1
+                      last_page:
+                        type: integer
+                        example: 1
+                      links:
+                        type: array
+                        example:
+                          -
+                            url: null
+                            label: '&laquo; Previous'
+                            page: null
+                            active: false
+                          -
+                            url: '/?page=1'
+                            label: '1'
+                            page: 1
+                            active: true
+                          -
+                            url: null
+                            label: 'Next &raquo;'
+                            page: null
+                            active: false
+                        items:
+                          type: object
+                          properties:
+                            url:
+                              type: string
+                              example: null
+                              nullable: true
+                            label:
+                              type: string
+                              example: '&laquo; Previous'
+                            page:
+                              type: string
+                              example: null
+                              nullable: true
+                            active:
+                              type: boolean
+                              example: false
+                      path:
+                        type: string
+                        example: /
+                      per_page:
+                        type: integer
+                        example: 20
+                      to:
+                        type: integer
+                        example: 2
+                      total:
+                        type: integer
+                        example: 2
+      tags:
+        - Tickets
+    post:
+      summary: 'Create a ticket'
+      operationId: createATicket
+      description: ''
+      parameters: []
+      responses:
+        201:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    reference: TKT-324575
+                    subject: 'Accusantium harum mollitia modi deserunt aut ab'
+                    description: "Quo omnis nostrum aut adipisci. Nostrum qui commodi incidunt iure. Et et modi ipsum nostrum. Autem et consequatur aut dolores enim non facere tempora. Voluptatem laboriosam praesentium quis adipisci.\n\nDeleniti distinctio eum doloremque id aut. Aliquam veniam corporis dolorem mollitia deleniti nemo. Quia officia est dignissimos neque. Odio veritatis excepturi doloribus delectus fugit qui repudiandae."
+                    status: open
+                    priority: low
+                    category: null
+                    requester: 'Jacques Howe'
+                    assignee: null
+                    first_response_due_at: null
+                    resolution_due_at: null
+                    first_responded_at: null
+                    resolved_at: null
+                    created_at: '2026-10-14T11:00:22.000000Z'
+                    updated_at: '2026-10-14T11:00:22.000000Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      reference:
+                        type: string
+                        example: TKT-324575
+                      subject:
+                        type: string
+                        example: 'Accusantium harum mollitia modi deserunt aut ab'
+                      description:
+                        type: string
+                        example: "Quo omnis nostrum aut adipisci. Nostrum qui commodi incidunt iure. Et et modi ipsum nostrum. Autem et consequatur aut dolores enim non facere tempora. Voluptatem laboriosam praesentium quis adipisci.\n\nDeleniti distinctio eum doloremque id aut. Aliquam veniam corporis dolorem mollitia deleniti nemo. Quia officia est dignissimos neque. Odio veritatis excepturi doloribus delectus fugit qui repudiandae."
+                      status:
+                        type: string
+                        example: open
+                      priority:
+                        type: string
+                        example: low
+                      category:
+                        type: string
+                        example: null
+                        nullable: true
+                      requester:
+                        type: string
+                        example: 'Jacques Howe'
+                      assignee:
+                        type: string
+                        example: null
+                        nullable: true
+                      first_response_due_at:
+                        type: string
+                        example: null
+                        nullable: true
+                      resolution_due_at:
+                        type: string
+                        example: null
+                        nullable: true
+                      first_responded_at:
+                        type: string
+                        example: null
+                        nullable: true
+                      resolved_at:
+                        type: string
+                        example: null
+                        nullable: true
+                      created_at:
+                        type: string
+                        example: '2026-10-14T11:00:22.000000Z'
+                      updated_at:
+                        type: string
+                        example: '2026-10-14T11:00:22.000000Z'
+      tags:
+        - Tickets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subject:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: b
+                description:
+                  type: string
+                  description: 'Must not be greater than 10000 characters.'
+                  example: 'Et animi quos velit et fugiat.'
+                category_id:
+                  type: string
+                  description: ''
+                  example: null
+                  nullable: true
+                priority:
+                  type: string
+                  description: ''
+                  example: urgent
+                  enum:
+                    - low
+                    - medium
+                    - high
+                    - urgent
+              required:
+                - subject
+                - description
+  '/api/v1/tickets/{reference}':
+    get:
+      summary: 'Show a ticket'
+      operationId: showATicket
+      description: 'With its messages, oldest first.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    reference: TKT-27724
+                    subject: 'Nostrum qui commodi incidunt iure'
+                    description: "Et modi ipsum nostrum omnis autem et consequatur. Dolores enim non facere tempora. Voluptatem laboriosam praesentium quis adipisci.\n\nDeleniti distinctio eum doloremque id aut. Aliquam veniam corporis dolorem mollitia deleniti nemo. Quia officia est dignissimos neque. Odio veritatis excepturi doloribus delectus fugit qui repudiandae."
+                    status: open
+                    priority: low
+                    category: null
+                    requester: 'Jacques Howe'
+                    assignee: null
+                    first_response_due_at: null
+                    resolution_due_at: null
+                    first_responded_at: null
+                    resolved_at: null
+                    created_at: '2026-10-14T11:00:22.000000Z'
+                    updated_at: '2026-10-14T11:00:22.000000Z'
+                    messages:
+                      -
+                        id: 158
+                        type: reply
+                        body: 'Tenetur ab reiciendis quia perspiciatis. Ducimus corrupti et dolores quia maiores assumenda. Doloribus repellat officiis corporis nesciunt ut ratione iure. Molestiae ut rem est esse.'
+                        author: 'Jacques Howe'
+                        created_at: '2026-10-14T11:00:22.000000Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      reference:
+                        type: string
+                        example: TKT-27724
+                      subject:
+                        type: string
+                        example: 'Nostrum qui commodi incidunt iure'
+                      description:
+                        type: string
+                        example: "Et modi ipsum nostrum omnis autem et consequatur. Dolores enim non facere tempora. Voluptatem laboriosam praesentium quis adipisci.\n\nDeleniti distinctio eum doloremque id aut. Aliquam veniam corporis dolorem mollitia deleniti nemo. Quia officia est dignissimos neque. Odio veritatis excepturi doloribus delectus fugit qui repudiandae."
+                      status:
+                        type: string
+                        example: open
+                      priority:
+                        type: string
+                        example: low
+                      category:
+                        type: string
+                        example: null
+                        nullable: true
+                      requester:
+                        type: string
+                        example: 'Jacques Howe'
+                      assignee:
+                        type: string
+                        example: null
+                        nullable: true
+                      first_response_due_at:
+                        type: string
+                        example: null
+                        nullable: true
+                      resolution_due_at:
+                        type: string
+                        example: null
+                        nullable: true
+                      first_responded_at:
+                        type: string
+                        example: null
+                        nullable: true
+                      resolved_at:
+                        type: string
+                        example: null
+                        nullable: true
+                      created_at:
+                        type: string
+                        example: '2026-10-14T11:00:22.000000Z'
+                      updated_at:
+                        type: string
+                        example: '2026-10-14T11:00:22.000000Z'
+                      messages:
+                        type: array
+                        example:
+                          -
+                            id: 158
+                            type: reply
+                            body: 'Tenetur ab reiciendis quia perspiciatis. Ducimus corrupti et dolores quia maiores assumenda. Doloribus repellat officiis corporis nesciunt ut ratione iure. Molestiae ut rem est esse.'
+                            author: 'Jacques Howe'
+                            created_at: '2026-10-14T11:00:22.000000Z'
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 158
+                            type:
+                              type: string
+                              example: reply
+                            body:
+                              type: string
+                              example: 'Tenetur ab reiciendis quia perspiciatis. Ducimus corrupti et dolores quia maiores assumenda. Doloribus repellat officiis corporis nesciunt ut ratione iure. Molestiae ut rem est esse.'
+                            author:
+                              type: string
+                              example: 'Jacques Howe'
+                            created_at:
+                              type: string
+                              example: '2026-10-14T11:00:22.000000Z'
+      tags:
+        - Tickets
+    parameters:
+      -
+        in: path
+        name: reference
+        description: ''
+        example: 2
+        required: true
+        schema:
+          type: integer
+  '/api/v1/tickets/{ticket_reference}/messages':
+    post:
+      summary: 'Reply to a ticket'
+      operationId: replyToATicket
+      description: 'Staff can send `internal: true` to add an internal note instead.'
+      parameters: []
+      responses:
+        201:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 159
+                    type: reply
+                    body: 'Animi quos velit et fugiat. Nihil accusantium harum mollitia modi deserunt. Ab provident perspiciatis quo omnis nostrum aut adipisci.'
+                    author: 'Brennon Anderson'
+                    created_at: '2026-10-14T11:00:22.000000Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 159
+                      type:
+                        type: string
+                        example: reply
+                      body:
+                        type: string
+                        example: 'Animi quos velit et fugiat. Nihil accusantium harum mollitia modi deserunt. Ab provident perspiciatis quo omnis nostrum aut adipisci.'
+                      author:
+                        type: string
+                        example: 'Brennon Anderson'
+                      created_at:
+                        type: string
+                        example: '2026-10-14T11:00:22.000000Z'
+      tags:
+        - Tickets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body:
+                  type: string
+                  description: 'Must not be greater than 10000 characters.'
+                  example: b
+                internal:
+                  type: boolean
+                  description: ''
+                  example: true
+              required:
+                - body
+    parameters:
+      -
+        in: path
+        name: ticket_reference
+        description: ''
+        example: 2
+        required: true
+        schema:
+          type: integer

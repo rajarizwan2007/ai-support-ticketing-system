@@ -1,0 +1,283 @@
+name: Tickets
+description: ''
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/tickets
+    metadata:
+      custom: []
+      groupName: Tickets
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List tickets'
+      description: 'Newest first, 20 per page.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_API_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      status:
+        custom: []
+        name: status
+        description: 'Only tickets with this status.'
+        required: false
+        example: closed
+        type: string
+        enumValues:
+          - open
+          - pending
+          - on_hold
+          - resolved
+          - closed
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      status: closed
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"data":[{"reference":"TKT-911680","subject":"Quidem nostrum qui commodi incidunt iure odit","description":"Modi ipsum nostrum omnis autem et. Aut dolores enim non facere tempora ex voluptatem. Praesentium quis adipisci molestias fugit. Distinctio eum doloremque id aut libero aliquam veniam corporis.\n\nDeleniti nemo odit quia officia. Dignissimos neque blanditiis odio. Excepturi doloribus delectus fugit qui repudiandae laboriosam.","status":"open","priority":"low","category":null,"requester":"Brennon Anderson","assignee":null,"first_response_due_at":null,"resolution_due_at":null,"first_responded_at":null,"resolved_at":null,"created_at":"2026-10-14T11:00:22.000000Z","updated_at":"2026-10-14T11:00:22.000000Z"},{"reference":"TKT-750722","subject":"Ex repellendus assumenda et tenetur ab reiciendis","description":"Deserunt ducimus corrupti et dolores quia maiores. Odit doloribus repellat officiis corporis nesciunt ut ratione iure. Molestiae ut rem est esse. Aut molestiae sunt suscipit doloribus fugiat.\n\nDeserunt et error neque recusandae et. Dolorem et ut dicta. Assumenda consequatur ut et sunt quisquam. Repellendus ut eaque alias ratione dolores.","status":"open","priority":"low","category":null,"requester":"Sheldon Herman","assignee":null,"first_response_due_at":null,"resolution_due_at":null,"first_responded_at":null,"resolved_at":null,"created_at":"2026-10-14T11:00:22.000000Z","updated_at":"2026-10-14T11:00:22.000000Z"}],"links":{"first":"\/?page=1","last":"\/?page=1","prev":null,"next":null},"meta":{"current_page":1,"from":1,"last_page":1,"links":[{"url":null,"label":"&laquo; Previous","page":null,"active":false},{"url":"\/?page=1","label":"1","page":1,"active":true},{"url":null,"label":"Next &raquo;","page":null,"active":false}],"path":"\/","per_page":20,"to":2,"total":2}}'
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/tickets
+    metadata:
+      custom: []
+      groupName: Tickets
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Create a ticket'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_API_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      subject:
+        custom: []
+        name: subject
+        description: 'Must not be greater than 255 characters.'
+        required: true
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      description:
+        custom: []
+        name: description
+        description: 'Must not be greater than 10000 characters.'
+        required: true
+        example: 'Et animi quos velit et fugiat.'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      category_id:
+        custom: []
+        name: category_id
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      priority:
+        custom: []
+        name: priority
+        description: ''
+        required: false
+        example: urgent
+        type: string
+        enumValues:
+          - low
+          - medium
+          - high
+          - urgent
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      subject: b
+      description: 'Et animi quos velit et fugiat.'
+      priority: urgent
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 201
+        content: '{"data":{"reference":"TKT-324575","subject":"Accusantium harum mollitia modi deserunt aut ab","description":"Quo omnis nostrum aut adipisci. Nostrum qui commodi incidunt iure. Et et modi ipsum nostrum. Autem et consequatur aut dolores enim non facere tempora. Voluptatem laboriosam praesentium quis adipisci.\n\nDeleniti distinctio eum doloremque id aut. Aliquam veniam corporis dolorem mollitia deleniti nemo. Quia officia est dignissimos neque. Odio veritatis excepturi doloribus delectus fugit qui repudiandae.","status":"open","priority":"low","category":null,"requester":"Jacques Howe","assignee":null,"first_response_due_at":null,"resolution_due_at":null,"first_responded_at":null,"resolved_at":null,"created_at":"2026-10-14T11:00:22.000000Z","updated_at":"2026-10-14T11:00:22.000000Z"}}'
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/tickets/{reference}'
+    metadata:
+      custom: []
+      groupName: Tickets
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Show a ticket'
+      description: 'With its messages, oldest first.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_API_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      reference:
+        custom: []
+        name: reference
+        description: ''
+        required: true
+        example: 2
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      reference: 2
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"data":{"reference":"TKT-27724","subject":"Nostrum qui commodi incidunt iure","description":"Et modi ipsum nostrum omnis autem et consequatur. Dolores enim non facere tempora. Voluptatem laboriosam praesentium quis adipisci.\n\nDeleniti distinctio eum doloremque id aut. Aliquam veniam corporis dolorem mollitia deleniti nemo. Quia officia est dignissimos neque. Odio veritatis excepturi doloribus delectus fugit qui repudiandae.","status":"open","priority":"low","category":null,"requester":"Jacques Howe","assignee":null,"first_response_due_at":null,"resolution_due_at":null,"first_responded_at":null,"resolved_at":null,"created_at":"2026-10-14T11:00:22.000000Z","updated_at":"2026-10-14T11:00:22.000000Z","messages":[{"id":158,"type":"reply","body":"Tenetur ab reiciendis quia perspiciatis. Ducimus corrupti et dolores quia maiores assumenda. Doloribus repellat officiis corporis nesciunt ut ratione iure. Molestiae ut rem est esse.","author":"Jacques Howe","created_at":"2026-10-14T11:00:22.000000Z"}]}}'
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/tickets/{ticket_reference}/messages'
+    metadata:
+      custom: []
+      groupName: Tickets
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Reply to a ticket'
+      description: 'Staff can send `internal: true` to add an internal note instead.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_API_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      ticket_reference:
+        custom: []
+        name: ticket_reference
+        description: ''
+        required: true
+        example: 2
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      ticket_reference: 2
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      body:
+        custom: []
+        name: body
+        description: 'Must not be greater than 10000 characters.'
+        required: true
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      internal:
+        custom: []
+        name: internal
+        description: ''
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      body: b
+      internal: true
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 201
+        content: '{"data":{"id":159,"type":"reply","body":"Animi quos velit et fugiat. Nihil accusantium harum mollitia modi deserunt. Ab provident perspiciatis quo omnis nostrum aut adipisci.","author":"Brennon Anderson","created_at":"2026-10-14T11:00:22.000000Z"}}'
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

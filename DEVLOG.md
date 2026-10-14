@@ -5,6 +5,37 @@ Newest entry on top. Add an entry at the end of each work session.
 
 ---
 
+## 2026-10-14 — Public REST API (WBS 1.3.4)
+
+### Done
+- **Packages:** `laravel/sanctum` (via `php artisan install:api`, adds `personal_access_tokens` and `routes/api.php`) and `knuckleswtf/scribe` (dev).
+- **Endpoints** under `/api/v1` on the tenant subdomain: `POST /tokens` (email + password + device name → token), `DELETE /tokens/current`, `GET /tickets` (20 per page, optional `status`), `POST /tickets`, `GET /tickets/{reference}` (with messages), `POST /tickets/{reference}/messages`.
+- **Reuses** `CreateTicket`, `ReplyToTicket` (now returns the message), `TicketPolicy` and `Ticket::visibleTo()`: customers only see their own tickets and never internal notes.
+- **API Resources:** `TicketResource`, `MessageResource` (no internal ids, `organization_id` or embedding).
+- **Rate limit:** `api` limiter, 60/minute per user (per IP before login) → 429.
+- **Tenant:** `ResolveOrganization` added to the `api` group, before auth.
+- **Docs:** Scribe static output in `public/docs` (http://localhost:8088/docs/), with intro text on subdomains, tokens and limits.
+- **Tests:** new `ApiTest` (11: login, wrong password / other org's user, no token, other org's token, customer list, hidden notes + 403, staff see notes, create + reply, JSON validation errors, 429 after 60, revoke). Suite: 131 passing; Larastan clean.
+- **Checked by hand** through nginx: token from acme → list OK; same token on globex → 401; no token → 401; revoke → 204, then 401.
+- WBS 1.3.4.1–1.3.4.3 and 1.3.5.2 (API tests) marked done.
+
+### Decisions
+- **Token login endpoint, no UI:** clients (scripts, integrations) get a token with email + password. A settings page for tokens can come later.
+- **Token-only API:** Sanctum `guard` and `stateful` are empty, so the API never uses the session cookie; the React app keeps its own web routes.
+- **No `organization_id` on `personal_access_tokens`:** the token's user is loaded through the tenant-scoped `users` query, so another organization's token is simply 401. Noted in the ERD.
+- **Static Scribe docs, no response calls:** examples come from factories inside a rolled-back transaction (Scribe's `bootstrap` hook makes the first organization current), so generating docs never hits the API or changes data.
+
+### Problems & fixes
+- A new ticket's `status` came back `null` (database default, not loaded) → the API returns `$ticket->refresh()`.
+- Larastan flagged Sanctum's published `stateful` config (`env()` may be bool) → set to `[]`, since the API is token-only.
+- `vp check` flagged Scribe's generated files → added `.scribe/**` and `public/docs/**` to the formatter's ignore list.
+
+### Next
+- [ ] Horizon (1.3.2.1)
+- [ ] Week 4: Python + FastAPI
+
+---
+
 ## 2026-10-14 — In-app notifications and bell (WBS 1.3.3)
 
 ### Done

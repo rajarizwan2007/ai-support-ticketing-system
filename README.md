@@ -43,6 +43,7 @@ GitHub Actions runs Pint, Larastan, the frontend build, the type-check and the t
 
 - [Project summary](docs/SUMMARY.md)
 - [ERD](docs/erd.md)
+- API docs (Scribe): http://localhost:8088/docs/ — regenerate with `docker compose exec app php artisan scribe:generate`
 - [ADR-001: multi-tenancy](docs/adr/0001-multi-tenancy.md)
 - [ADR-002: embedding model for similar tickets](docs/adr/0002-ai-providers.md)
 - [Dev log](DEVLOG.md)

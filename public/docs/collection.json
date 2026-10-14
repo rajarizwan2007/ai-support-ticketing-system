@@ -1,0 +1,267 @@
+{
+    "variable": [
+        {
+            "id": "baseUrl",
+            "key": "baseUrl",
+            "type": "string",
+            "name": "string",
+            "value": "http:\/\/acme.localhost:8088"
+        }
+    ],
+    "info": {
+        "name": "ai-support-ticketing-system API Documentation",
+        "_postman_id": "dac721bb-914b-4b0b-ac9f-e15048d4c258",
+        "description": "Create, list, show and reply to support tickets in your organization.",
+        "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json"
+    },
+    "item": [
+        {
+            "name": "Authentication",
+            "description": "",
+            "item": [
+                {
+                    "name": "Create a token",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/tokens",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/tokens"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"email\":\"gbailey@example.net\",\"password\":\"|]|{+-\",\"device_name\":\"v\"}"
+                        },
+                        "description": "Log in with email and password and get a token for the Authorization header.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\"token\":\"1|aBcDeFgHiJkLmNoPqRsTuVwXyZ\"}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Revoke the current token",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/tokens\/current",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/tokens\/current"
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 204,
+                            "body": null,
+                            "name": ""
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Tickets",
+            "description": "",
+            "item": [
+                {
+                    "name": "List tickets",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/tickets",
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "closed",
+                                    "description": "Only tickets with this status.",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/tickets?status=closed"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Newest first, 20 per page."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"data\":[{\"reference\":\"TKT-911680\",\"subject\":\"Quidem nostrum qui commodi incidunt iure odit\",\"description\":\"Modi ipsum nostrum omnis autem et. Aut dolores enim non facere tempora ex voluptatem. Praesentium quis adipisci molestias fugit. Distinctio eum doloremque id aut libero aliquam veniam corporis.\\n\\nDeleniti nemo odit quia officia. Dignissimos neque blanditiis odio. Excepturi doloribus delectus fugit qui repudiandae laboriosam.\",\"status\":\"open\",\"priority\":\"low\",\"category\":null,\"requester\":\"Brennon Anderson\",\"assignee\":null,\"first_response_due_at\":null,\"resolution_due_at\":null,\"first_responded_at\":null,\"resolved_at\":null,\"created_at\":\"2026-10-14T11:00:22.000000Z\",\"updated_at\":\"2026-10-14T11:00:22.000000Z\"},{\"reference\":\"TKT-750722\",\"subject\":\"Ex repellendus assumenda et tenetur ab reiciendis\",\"description\":\"Deserunt ducimus corrupti et dolores quia maiores. Odit doloribus repellat officiis corporis nesciunt ut ratione iure. Molestiae ut rem est esse. Aut molestiae sunt suscipit doloribus fugiat.\\n\\nDeserunt et error neque recusandae et. Dolorem et ut dicta. Assumenda consequatur ut et sunt quisquam. Repellendus ut eaque alias ratione dolores.\",\"status\":\"open\",\"priority\":\"low\",\"category\":null,\"requester\":\"Sheldon Herman\",\"assignee\":null,\"first_response_due_at\":null,\"resolution_due_at\":null,\"first_responded_at\":null,\"resolved_at\":null,\"created_at\":\"2026-10-14T11:00:22.000000Z\",\"updated_at\":\"2026-10-14T11:00:22.000000Z\"}],\"links\":{\"first\":\"\\\/?page=1\",\"last\":\"\\\/?page=1\",\"prev\":null,\"next\":null},\"meta\":{\"current_page\":1,\"from\":1,\"last_page\":1,\"links\":[{\"url\":null,\"label\":\"&laquo; Previous\",\"page\":null,\"active\":false},{\"url\":\"\\\/?page=1\",\"label\":\"1\",\"page\":1,\"active\":true},{\"url\":null,\"label\":\"Next &raquo;\",\"page\":null,\"active\":false}],\"path\":\"\\\/\",\"per_page\":20,\"to\":2,\"total\":2}}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Create a ticket",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/tickets",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/tickets"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"subject\":\"b\",\"description\":\"Et animi quos velit et fugiat.\",\"priority\":\"urgent\"}"
+                        },
+                        "description": ""
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\"data\":{\"reference\":\"TKT-324575\",\"subject\":\"Accusantium harum mollitia modi deserunt aut ab\",\"description\":\"Quo omnis nostrum aut adipisci. Nostrum qui commodi incidunt iure. Et et modi ipsum nostrum. Autem et consequatur aut dolores enim non facere tempora. Voluptatem laboriosam praesentium quis adipisci.\\n\\nDeleniti distinctio eum doloremque id aut. Aliquam veniam corporis dolorem mollitia deleniti nemo. Quia officia est dignissimos neque. Odio veritatis excepturi doloribus delectus fugit qui repudiandae.\",\"status\":\"open\",\"priority\":\"low\",\"category\":null,\"requester\":\"Jacques Howe\",\"assignee\":null,\"first_response_due_at\":null,\"resolution_due_at\":null,\"first_responded_at\":null,\"resolved_at\":null,\"created_at\":\"2026-10-14T11:00:22.000000Z\",\"updated_at\":\"2026-10-14T11:00:22.000000Z\"}}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Show a ticket",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/tickets\/:reference",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/tickets\/:reference",
+                            "variable": [
+                                {
+                                    "id": "reference",
+                                    "key": "reference",
+                                    "value": 2,
+                                    "description": ""
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "With its messages, oldest first."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"data\":{\"reference\":\"TKT-27724\",\"subject\":\"Nostrum qui commodi incidunt iure\",\"description\":\"Et modi ipsum nostrum omnis autem et consequatur. Dolores enim non facere tempora. Voluptatem laboriosam praesentium quis adipisci.\\n\\nDeleniti distinctio eum doloremque id aut. Aliquam veniam corporis dolorem mollitia deleniti nemo. Quia officia est dignissimos neque. Odio veritatis excepturi doloribus delectus fugit qui repudiandae.\",\"status\":\"open\",\"priority\":\"low\",\"category\":null,\"requester\":\"Jacques Howe\",\"assignee\":null,\"first_response_due_at\":null,\"resolution_due_at\":null,\"first_responded_at\":null,\"resolved_at\":null,\"created_at\":\"2026-10-14T11:00:22.000000Z\",\"updated_at\":\"2026-10-14T11:00:22.000000Z\",\"messages\":[{\"id\":158,\"type\":\"reply\",\"body\":\"Tenetur ab reiciendis quia perspiciatis. Ducimus corrupti et dolores quia maiores assumenda. Doloribus repellat officiis corporis nesciunt ut ratione iure. Molestiae ut rem est esse.\",\"author\":\"Jacques Howe\",\"created_at\":\"2026-10-14T11:00:22.000000Z\"}]}}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Reply to a ticket",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/tickets\/:ticket_reference\/messages",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/tickets\/:ticket_reference\/messages",
+                            "variable": [
+                                {
+                                    "id": "ticket_reference",
+                                    "key": "ticket_reference",
+                                    "value": 2,
+                                    "description": ""
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"body\":\"b\",\"internal\":true}"
+                        },
+                        "description": "Staff can send `internal: true` to add an internal note instead."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\"data\":{\"id\":159,\"type\":\"reply\",\"body\":\"Animi quos velit et fugiat. Nihil accusantium harum mollitia modi deserunt. Ab provident perspiciatis quo omnis nostrum aut adipisci.\",\"author\":\"Brennon Anderson\",\"created_at\":\"2026-10-14T11:00:22.000000Z\"}}",
+                            "name": ""
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "Authorization",
+                "type": "string"
+            }
+        ]
+    }
+}

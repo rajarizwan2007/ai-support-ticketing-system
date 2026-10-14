@@ -5,6 +5,7 @@ namespace App\Actions\Tickets;
 use App\Enums\MessageType;
 use App\Enums\TicketStatus;
 use App\Events\TicketReplied;
+use App\Models\Message;
 use App\Models\Role;
 use App\Models\Ticket;
 use App\Models\User;
@@ -21,7 +22,7 @@ class ReplyToTicket
      *
      * @param  array<int, UploadedFile>  $files
      */
-    public function handle(Ticket $ticket, User $user, string $body, bool $isInternal = false, array $files = []): void
+    public function handle(Ticket $ticket, User $user, string $body, bool $isInternal = false, array $files = []): Message
     {
         $message = $ticket->messages()->create([
             'user_id' => $user->id,
@@ -40,11 +41,13 @@ class ReplyToTicket
                 $ticket->update(['first_responded_at' => now()]);
             }
 
-            return;
+            return $message;
         }
 
         if (in_array($ticket->status, [TicketStatus::Pending, TicketStatus::Resolved, TicketStatus::Closed], true)) {
             $this->updateTicket->handle($ticket, $user, ['status' => TicketStatus::Open->value]);
         }
+
+        return $message;
     }
 }
